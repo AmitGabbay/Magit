@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         //createNewRepo("test", "C:/magit");
         Repository repo = createNewRepoFromScratch();
-        //git + github test
+        //git + github test22
     }
 
     private static Repository createNewRepoFromScratch() {
