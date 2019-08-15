@@ -14,7 +14,7 @@ public class Branch {
 
     @NotNull private String name;
 
-    private String pointedCommit;
+    @NotNull  private String pointedCommit;
 
     private boolean isRemote;
     private boolean tracking;
@@ -35,21 +35,23 @@ public class Branch {
     }
 
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Branch branch = (Branch) o;
-        return name.equals(branch.name);
+        return name.equals(branch.name) &&
+                pointedCommit.equals(branch.pointedCommit) &&
+                Objects.equals(trackingAfter, branch.trackingAfter);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
-    }
-
-    public String getName() {
-        return name;
+        return Objects.hash(name, pointedCommit, trackingAfter);
     }
 
     public String getPointedCommit() {
