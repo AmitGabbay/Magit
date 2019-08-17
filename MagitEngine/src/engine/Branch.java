@@ -9,12 +9,8 @@ import java.util.Objects;
  */
 public class Branch {
 
-
-
-
     @NotNull private String name;
-
-    @NotNull  private String pointedCommit;
+    @NotNull private String pointedCommit;
 
     private boolean isRemote;
     private boolean tracking;

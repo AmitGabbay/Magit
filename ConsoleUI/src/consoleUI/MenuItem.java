@@ -7,11 +7,10 @@ public enum MenuItem {
     NEW_REPO_SCRATCH(1,"Create new repo"),
     TRAVERSE_WC(2,"Traverse WC");
 
-    public static final int EXIT_OPER_CODE;
+    public static final int EXIT_OPER_CODE = values().length + 1;
     private static final Map<Integer, MenuItem> ITEM_BY_NUM = new HashMap<>();
 
     static {
-        EXIT_OPER_CODE = values().length + 1;
         for (MenuItem item : values())
             ITEM_BY_NUM.put(item.UI_OpNumber, item);
     }
@@ -47,7 +46,7 @@ public enum MenuItem {
 
     public void eval(){
         switch (this){
-            case NEW_REPO_SCRATCH: Main.createNewRepoFromScratchWrapper(); break;
+            case NEW_REPO_SCRATCH: MagitOperations.createNewRepoFromScratchWrapper(); break;
             case TRAVERSE_WC: engine.fileMangers.FolderTraverser2.traverseWC_Wrapper(); break;
         }
     }
