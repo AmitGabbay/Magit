@@ -66,6 +66,14 @@ public class MainMenu {
                 magit.traverseWC();
                 break;
 
+            case CHANGE_REPO:
+                magit.changeRepo();
+                break;
+
+            case PRINT_OBJECTS_TEST:
+                magit.printObject();
+                break;
+
         }
     }
 

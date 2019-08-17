@@ -75,6 +75,33 @@ public class Magit {
         this.repo.traverseWC();
     }
 
+    //todo verify error checking
+    //todo load from repoSetting file?
+    public void changeRepo(){
+
+        Scanner scanner = new Scanner(System.in);
+        String repoName, repoPath;
+        System.out.println("Please enter the location of your your existing repository:");
+        repoPath = scanner.nextLine();
+        //todo add check for .magit folder
+
+        //todo ask user for setting a name
+        int lastSlash = repoPath.lastIndexOf('\\');
+        repoName = repoPath.substring(lastSlash+1);
+        this.repo = new Repository(repoName, repoPath);
+        //todo to load data
+    }
+
+
+    /**
+     * testing only!!!
+     */
+    public void printObject(){
+        System.out.println(repo.getObjects());
+    }
+
+
+
     public boolean isRepoDefined() {
         return this.repo != null;
     }

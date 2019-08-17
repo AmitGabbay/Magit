@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum MenuItem {
-    NEW_REPO_SCRATCH(1,"Create new repo"),
-    TRAVERSE_WC(2,"Traverse WC");
+    NEW_REPO_SCRATCH(1,"Create new Magit repository"),
+    TRAVERSE_WC(2,"Traverse WC"),
+    CHANGE_REPO(3,"Change to existing Magit repository"),
+    PRINT_OBJECTS_TEST(777,"Test: print objects");
 
     public static final int EXIT_OPER_CODE = values().length + 1;
     private static final Map<Integer, MenuItem> ITEM_BY_NUM = new HashMap<>();

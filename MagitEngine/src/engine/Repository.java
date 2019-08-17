@@ -1,36 +1,37 @@
 package engine;
 
-import engine.fileMangers.FileUtils;
-import engine.fileMangers.FolderTraverser2;
+import engine.fileMangers.MagitFileUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class Repository {
 
     private RepoSettings basicSettings;
     private Set<Branch> branches;
+    private Map<String, MagitObject> objects;//Todo add objects map
     private Path repoPath;
     private Path magitPath;
     private Path objectsPath;
     private Path branchesPath;
 
-    //private Map<String, > //Todo add objects map
-
 
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashSet<>();
+        this.objects = new HashMap<>();
         this.initializePaths();
     }
 
     public static void checkNewRepoPath(String requestedParentPath, String newRepoName) throws InvalidPathException, FileAlreadyExistsException {
-        FileUtils.CreateNewRepoOnDisk_PathValidation(requestedParentPath, newRepoName);
+        MagitFileUtils.CreateNewRepoOnDisk_PathValidation(requestedParentPath, newRepoName);
     }
 
     /**
@@ -45,11 +46,11 @@ public class Repository {
     public static Repository newRepoFromScratchCreator(String newRepoName, String requestedPath) throws IOException {
 
         Repository newRepo = new Repository(newRepoName, requestedPath);
-        FileUtils.createNewRepoOnDisk(newRepo.getBasicSettings());
+        MagitFileUtils.createNewRepoOnDisk(newRepo.getBasicSettings());
 
         Branch master = Branch.createMasterBranch();
         newRepo.branches.add(master);
-        FileUtils.writeBranchToDisk(master, newRepo.branchesPath);
+        MagitFileUtils.writeBranchToDisk(master, newRepo.branchesPath);
         return newRepo;
     }
 
@@ -60,8 +61,8 @@ public class Repository {
         this.branchesPath = magitPath.resolve("branches");
     }
 
-    private void test() {
-
+    public void addObject(MagitObject object) {
+        this.objects.put(object.calcSha1(), object);
     }
 
     public String getName() {
@@ -77,6 +78,10 @@ public class Repository {
     }
 
     public void traverseWC(){
-       FolderTraverser2.traverseWC(this.repoPath);
+       MagitFileUtils.getFirstCommitFromWC(this);
+    }
+
+    public Map<String, MagitObject> getObjects() {
+        return objects;
     }
 }

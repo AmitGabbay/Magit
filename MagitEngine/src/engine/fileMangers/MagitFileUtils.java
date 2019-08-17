@@ -1,13 +1,14 @@
 package engine.fileMangers;
 
-import engine.Branch;
-import engine.RepoSettings;
-import engine.Repository;
+import engine.*;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FileUtils {
+public class MagitFileUtils {
+
 
     /**
      * Checks path validity (parent path exist and there is no folder with new repo name in it).
@@ -74,6 +75,36 @@ public class FileUtils {
     }
 
 
+    public static void getFirstCommitFromWC(Repository repo){
+        File repoDir = new File(repo.getStringPath());
+        getFirstCommitFromWC_Rec(repoDir, repo);
+    }
+
+    //todo send instead only the objects map?
+    private static void getFirstCommitFromWC_Rec(File dir, Repository repo) {
+        try {
+            File[] files = dir.listFiles();
+            for (File file : files) {
+
+                //todo catch I/O ERROR OUTSIDE THE METHOD
+
+                if (file.isDirectory() && file.getName().equals(".magit"))  // TODO CREATE ANOTHER METHOD WITHOUT THIS?
+                    continue;
+
+                if (file.isDirectory()) {
+                    System.out.println("directory:" + file.getCanonicalPath());
+                    getFirstCommitFromWC_Rec(file, repo);
+                } else {
+                    System.out.println("file:" + file.getCanonicalPath());
+                    repo.addObject(new Blob(file));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * test only!!!
      * @param branchToWrite
@@ -90,13 +121,4 @@ public class FileUtils {
             out.write("ama");
         }
     }
-
-
-
-
-
-
-
-
-
 }
