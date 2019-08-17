@@ -2,26 +2,32 @@ package consoleUI;
 
 import java.util.Scanner;
 
-public class Main {
+public class MainMenu {
 
-    //private static Repository repo;
+    private static Magit magit = new Magit();
 
     public static void main(String[] args) {
-        //MagitOperations magit = new MagitOperations();
+
         System.out.println("Welcome to Magit!\n");
-        printMenu();
-        System.out.println();
-        int userSelectionNum = getValidUserOperSelction();
-        if (MenuItem.isExitCode(userSelectionNum))
-            System.out.println("Goodbye!");
-        else {
-            MenuItem userSelection = MenuItem.getItemByInt(userSelectionNum);
-            userSelection.eval();
-        }
-        //git + github test22
+        boolean toEnd = false;
+        do {
+            System.out.println();
+            magit.printCurrentRepoDetails();
+            printMenu();
+            System.out.println();
+            int userSelectionNum = getValidUserOperSelction();
+            if (MenuItem.isExitCode(userSelectionNum)) {
+                System.out.println("Goodbye!");
+                toEnd = true;
+            } else {
+                MenuItem userSelection = MenuItem.getItemByInt(userSelectionNum);
+                doRequestedOperation(userSelection);
+            }
+        } while (!toEnd);
     }
 
     private static void printMenu() {
+        System.out.println("Please type the number of the operation you wish to do:");
         for (MenuItem item : MenuItem.values())
             System.out.println(item);
         System.out.println(MenuItem.EXIT_OPER_CODE + ". Quit program");
@@ -31,7 +37,6 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         int selection;
         boolean validInput = false;
-        System.out.println("Please type the number of the operation you want to do:");
 
         do {
             while (!scanner.hasNextInt()) {
@@ -47,9 +52,21 @@ public class Main {
             else
                 System.out.println(selection + " is not a valid operation code. Please type a one...");
 
-        } while (validInput == false);
+        } while (!validInput);
 
         return selection;
+    }
+
+    private static void doRequestedOperation(MenuItem requestedOper) {
+        switch (requestedOper) {
+            case NEW_REPO_SCRATCH:
+                magit.createNewRepoFromScratch();
+                break;
+            case TRAVERSE_WC:
+                magit.traverseWC();
+                break;
+
+        }
     }
 
 

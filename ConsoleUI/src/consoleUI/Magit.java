@@ -7,21 +7,22 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 import java.util.Scanner;
 
-public class MagitOperations {
+public class Magit {
 
-    private static Repository repo = null;
+    private Repository repo = null;
 
-    public static void createNewRepoFromScratchWrapper() {
-        repo = createNewRepoFromScratch();
-    }
+//    public static void createNewRepoFromScratchWrapper() {
+//        repo = createNewRepoFromScratch();
+//    }
 
-    private static Repository createNewRepoFromScratch() {
+    public void createNewRepoFromScratch() {
         Repository newRepo = null;
         String newRepoName = null;
         String requestedParentPath = null;
         Scanner scanner = new Scanner(System.in);
         boolean finishInputLoop = false;
-
+        if (isRepoDefined()) //todo
+            System.out.println("add q for changing repo");
         do {
             System.out.print("Please enter your new repo name: ");
             try {
@@ -61,6 +62,38 @@ public class MagitOperations {
             }
         } while (!finishInputLoop);
 
-        return newRepo;
+        this.repo = newRepo;
+    }
+
+
+    public void traverseWC() {
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        this.repo.traverseWC();
+    }
+
+    public boolean isRepoDefined() {
+        return this.repo != null;
+    }
+
+    public void printCurrentRepoDetails() {
+        System.out.print("Working on the Repository: ");
+        if (isRepoDefined()) {
+            System.out.print(repo.getName() + "\t");
+            System.out.println("Located in: " + repo.getStringPath());
+        } else
+            System.out.println("N\\A");
+    }
+
+    public static void printNoDefinedRepoMsg()
+    {
+        System.out.println("Error! Magit cannot perform this operation without a defined " +
+                "repository. \nPlease open an existing one or create a new one and then try again.");
+        System.out.println();
     }
 }
+
+

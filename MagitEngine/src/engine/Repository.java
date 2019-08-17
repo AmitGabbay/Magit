@@ -1,6 +1,7 @@
 package engine;
 
 import engine.fileMangers.FileUtils;
+import engine.fileMangers.FolderTraverser2;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -75,4 +76,7 @@ public class Repository {
         return basicSettings;
     }
 
+    public void traverseWC(){
+       FolderTraverser2.traverseWC(this.repoPath);
+    }
 }

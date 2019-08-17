@@ -44,11 +44,11 @@ public enum MenuItem {
         return UI_OpNumber + ". " + UI_Text;
     }
 
-    public void eval(){
-        switch (this){
-            case NEW_REPO_SCRATCH: MagitOperations.createNewRepoFromScratchWrapper(); break;
-            case TRAVERSE_WC: engine.fileMangers.FolderTraverser2.traverseWC_Wrapper(); break;
-        }
-    }
+//    public void eval(){
+//            switch (this){
+//                case NEW_REPO_SCRATCH: Magit.createNewRepoFromScratchWrapper(); break;
+//                case TRAVERSE_WC: engine.fileMangers.FolderTraverser2.traverseWC_Wrapper(); break;
+//            }
+//    }
 
 }
