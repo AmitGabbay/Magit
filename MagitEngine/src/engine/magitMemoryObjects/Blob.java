@@ -33,4 +33,9 @@ public class Blob implements  MagitObject {
     public int hashCode() {
         return Objects.hash(content);
     }
+
+    @Override
+    public String toString() {
+        return this.content;
+    }
 }

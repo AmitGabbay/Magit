@@ -1,11 +1,15 @@
 package consoleUI;
 
 import engine.Repository;
+import engine.magitMemoryObjects.MagitObject;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
+
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Magit {
 
@@ -96,9 +100,17 @@ public class Magit {
      * testing only!!!
      */
     public void printObject(){
-        System.out.println(repo.getObjects());
-    }
+        Set<Map.Entry<String, MagitObject>> objects = repo.getObjectsAsEntrySet();
+        for (Map.Entry<String, MagitObject> object: objects) {
+            System.out.println(object.getKey() + ": " + object.getValue());
+        }
 
+        //System.out.println(repo.getObjectsAsMap());
+
+//        Collection<MagitObject> objects  = repo.getObjectsTxtAsCollection();
+//        for(MagitObject object : objects)
+//            System.out.println(object);
+    }
 
 
     public boolean isRepoDefined() {

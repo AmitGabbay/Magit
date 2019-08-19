@@ -79,8 +79,9 @@ public class MagitFileUtils {
         // todo create commit and assign it the root folder sha1
         MagitFolder repoRoot = new MagitFolder();
         getFirstCommitFromWC_Rec(repoDir, repo, repoRoot);
-        Commit firstCommit = new Commit(repoRoot.calcSha1());
         repo.addObject(repoRoot);
+        Commit firstCommit = new Commit(repoRoot.calcSha1());
+        repo.addCommit(firstCommit);
     }
 
     //todo send instead only the objects map?
