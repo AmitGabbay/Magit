@@ -21,8 +21,8 @@ public class Magit {
         String requestedParentPath = null;
         Scanner scanner = new Scanner(System.in);
         boolean finishInputLoop = false;
-        if (isRepoDefined()) //todo
-            System.out.println("add q for changing repo");
+//        if (isRepoDefined())      --> is this needed?
+//            System.out.println("add q for changing repo");
         do {
             System.out.print("Please enter your new repo name: ");
             try {
@@ -76,7 +76,6 @@ public class Magit {
     }
 
     //todo verify error checking
-    //todo load from repoSetting file?
     public void changeRepo(){
 
         Scanner scanner = new Scanner(System.in);
@@ -89,7 +88,7 @@ public class Magit {
         int lastSlash = repoPath.lastIndexOf('\\');
         repoName = repoPath.substring(lastSlash+1);
         this.repo = new Repository(repoName, repoPath);
-        //todo to load data
+        //todo to load data (remember to load the head branch!!!)
     }
 
 

@@ -1,11 +1,10 @@
 package engine.fileMangers;
 
 import engine.*;
+import engine.magitMemoryObjects.*;
 
 import java.io.*;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MagitFileUtils {
 
@@ -77,13 +76,17 @@ public class MagitFileUtils {
 
     public static void getFirstCommitFromWC(Repository repo){
         File repoDir = new File(repo.getStringPath());
-        getFirstCommitFromWC_Rec(repoDir, repo);
+        // todo create commit and assign it the root folder sha1
+        MagitFolder repoRoot = new MagitFolder();
+        getFirstCommitFromWC_Rec(repoDir, repo, repoRoot);
+        Commit firstCommit = new Commit(repoRoot.calcSha1());
+        repo.addObject(repoRoot);
     }
 
     //todo send instead only the objects map?
-    private static void getFirstCommitFromWC_Rec(File dir, Repository repo) {
+    private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent) {
         try {
-            File[] files = dir.listFiles();
+            File[] files = currentObject.listFiles();
             for (File file : files) {
 
                 //todo catch I/O ERROR OUTSIDE THE METHOD
@@ -93,10 +96,17 @@ public class MagitFileUtils {
 
                 if (file.isDirectory()) {
                     System.out.println("directory:" + file.getCanonicalPath());
-                    getFirstCommitFromWC_Rec(file, repo);
+                    MagitFolder currentFolder = new MagitFolder();
+                    getFirstCommitFromWC_Rec(file, repo, currentFolder);
+                    repo.addObject(currentFolder);
+                    MagitObjMetadata fileData = new MagitObjMetadata(file.getName(), currentFolder.calcSha1(), MagitObjectType.FOLDER);
+                    parent.addObject(fileData);
                 } else {
                     System.out.println("file:" + file.getCanonicalPath());
-                    repo.addObject(new Blob(file));
+                    Blob fileContent = new Blob(file);
+                    repo.addObject(fileContent);
+                    MagitObjMetadata fileData = new MagitObjMetadata(file.getName(), fileContent.calcSha1(), MagitObjectType.FILE);
+                    parent.addObject(fileData);
                 }
             }
         } catch (IOException e) {

@@ -1,5 +1,7 @@
 package consoleUI;
 
+import engine.magitMemoryObjects.MagitObjectType;
+
 import java.util.Scanner;
 
 public class MainMenu {
@@ -8,14 +10,16 @@ public class MainMenu {
 
     public static void main(String[] args) {
 
+        System.out.println(MagitObjectType.FILE);
         System.out.println("Welcome to Magit!\n");
         boolean toEnd = false;
         do {
+
             System.out.println();
             magit.printCurrentRepoDetails();
             printMenu();
             System.out.println();
-            int userSelectionNum = getValidUserOperSelction();
+            int userSelectionNum = getValidUserOperSelection();
             if (MenuItem.isExitCode(userSelectionNum)) {
                 System.out.println("Goodbye!");
                 toEnd = true;
@@ -33,7 +37,7 @@ public class MainMenu {
         System.out.println(MenuItem.EXIT_OPER_CODE + ". Quit program");
     }
 
-    private static int getValidUserOperSelction() {
+    private static int getValidUserOperSelection() {
         Scanner scanner = new Scanner(System.in);
         int selection;
         boolean validInput = false;

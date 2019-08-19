@@ -1,6 +1,7 @@
 package engine;
 
 import engine.fileMangers.MagitFileUtils;
+import engine.magitMemoryObjects.MagitObject;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -16,7 +17,7 @@ public class Repository {
 
     private RepoSettings basicSettings;
     private Set<Branch> branches;
-    private Map<String, MagitObject> objects;//Todo add objects map
+    private Map<String, MagitObject> objects;
     private Path repoPath;
     private Path magitPath;
     private Path objectsPath;

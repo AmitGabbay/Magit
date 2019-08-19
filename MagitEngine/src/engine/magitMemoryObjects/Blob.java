@@ -1,4 +1,4 @@
-package engine;
+package engine.magitMemoryObjects;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
