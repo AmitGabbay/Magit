@@ -21,7 +21,15 @@ public class Repository {
     private Path magitPath;
     private Path objectsPath;
     private Path branchesPath;
+    private String activeUser = "Administrator";
 
+    public String getActiveUser() {
+        return activeUser;
+    }
+
+    public void setActiveUser(String newActiveUser) {
+        this.activeUser = newActiveUser;
+    }
 
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);

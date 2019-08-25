@@ -13,6 +13,7 @@ import java.util.Set;
 
 public class Magit {
 
+    public final static String DATE_FORMAT = "MM-dd-yy HH:mm a"; //TODO set aviad requested format
     private Repository repo = null;
 
 //    public static void createNewRepoFromScratchWrapper() {
