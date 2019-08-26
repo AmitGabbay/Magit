@@ -76,7 +76,6 @@ public class MagitFileUtils {
 
     public static void getFirstCommitFromWC(Repository repo){
         File repoDir = new File(repo.getStringPath());
-        // todo create commit and assign it the root folder sha1
         MagitFolder repoRoot = new MagitFolder();
         getFirstCommitFromWC_Rec(repoDir, repo, repoRoot);
         repo.addObject(repoRoot);
@@ -100,13 +99,13 @@ public class MagitFileUtils {
                     MagitFolder currentFolder = new MagitFolder();
                     getFirstCommitFromWC_Rec(file, repo, currentFolder);
                     repo.addObject(currentFolder);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, currentFolder.calcSha1(), MagitObjectType.FOLDER, repo.getActiveUser());
+                    MagitObjMetadata fileData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser());
                     parent.addObject(fileData);
-                } else {
+                } else  {   //is file
                     System.out.println("file:" + file.getCanonicalPath());
                     Blob fileContent = new Blob(file);
                     repo.addObject(fileContent);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), MagitObjectType.FILE, repo.getActiveUser());
+                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser());
                     parent.addObject(fileData);
                 }
             }

@@ -13,6 +13,7 @@ import java.util.*;
 
 public class Repository {
 
+    public final static String DATE_FORMAT = "dd.MM.yyyy-HH:mm:ss:SSS";
     private RepoSettings basicSettings;
     private Set<Branch> branches;
     private Map<String, MagitObject> objects;

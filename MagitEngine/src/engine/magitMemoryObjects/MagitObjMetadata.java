@@ -1,6 +1,9 @@
 package engine.magitMemoryObjects;
 
+import engine.Repository;
+
 import java.io.File;
+import java.text.SimpleDateFormat;
 
 public class MagitObjMetadata {
 
@@ -10,17 +13,21 @@ public class MagitObjMetadata {
     private String lastModifier;
     private String lastModifiedTime;
 
-    public MagitObjMetadata(File file, String sha1, MagitObjectType objectType, String lastModifier) {
+    public MagitObjMetadata(File file, String sha1, String lastModifier) {
+
         this.name = file.getName();
         this.sha1 = sha1;
-        this.objectType = objectType;
+
+        if (file.isDirectory())
+            this.objectType = MagitObjectType.FOLDER;
+        else // is File
+            this.objectType = MagitObjectType.FILE;
+
         this.lastModifier = lastModifier;
 
-
-        this.lastModifiedTime = "now"; //todo use SimpleDateFormat with the const format in magit object
-        //todo and omit objectType parameter (determain by the file parameter)
+        SimpleDateFormat sdf = new SimpleDateFormat(Repository.DATE_FORMAT);
+        this.lastModifiedTime = sdf.format(file.lastModified());
     }
-
 
 
     @Override
