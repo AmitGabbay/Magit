@@ -18,10 +18,12 @@ public class Repository {
     private Set<Branch> branches;
     private Map<String, MagitObject> objects;
     private Map<String, Commit> commits;
+
     private Path repoPath;
     private Path magitPath;
     private Path objectsPath;
     private Path branchesPath;
+
     private String activeUser = "Administrator";
 
     public String getActiveUser() {
@@ -75,7 +77,7 @@ public class Repository {
         this.objects.put(object.calcSha1(), object);
     }
 
-    public void addCommit(Commit commit){
+    public void addCommit(Commit commit) {
         this.commits.put(commit.calcSha1(), commit);
     }
 
@@ -91,20 +93,40 @@ public class Repository {
         return basicSettings;
     }
 
-    public void traverseWC(){
-       MagitFileUtils.getFirstCommitFromWC(this);
+    public void traverseWC() {
+        MagitFileUtils.getFirstCommitFromWC(this);
     }
 
     public Map<String, MagitObject> getObjectsAsMap() {
         return objects;
     }
 
-    public Collection<MagitObject> getObjectsTxtAsCollection(){
+    public Collection<MagitObject> getObjectsTxtAsCollection() {
         return objects.values();
     }
 
     public Set<Map.Entry<String, MagitObject>> getObjectsAsEntrySet() {
         return objects.entrySet();
+    }
+
+    public MagitObject getObject(String sha1) {
+        return objects.get(sha1);
+    }
+
+    public Path getMagitPath() {
+        return magitPath;
+    }
+
+    public Path getRepoPath() {
+        return repoPath;
+    }
+
+    public Path getObjectsPath() {
+        return objectsPath;
+    }
+
+    public Path getBranchesPath() {
+        return branchesPath;
     }
 
 }

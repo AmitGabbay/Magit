@@ -2,11 +2,11 @@ package engine.magitMemoryObjects;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 
 public class MagitFolder implements MagitObject, MagitParentObject {
+
+
 
     private Map<String, MagitObjMetadata> objects;
     private transient StringBuilder contentAsText;
@@ -37,6 +37,13 @@ public class MagitFolder implements MagitObject, MagitParentObject {
             contentAsText.append(objData.toString() + "\n");
         }
     }
+
+    public Set<Map.Entry<String, MagitObjMetadata>> getObjectsAsEntrySet() {
+        return objects.entrySet();
+    }
+
+
+
 
     @Override
     public boolean equals(Object o) {

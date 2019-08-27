@@ -6,6 +6,8 @@ import engine.magitMemoryObjects.*;
 import java.io.*;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
+import java.util.Map;
+import java.util.Set;
 
 public class MagitFileUtils {
 
@@ -13,6 +15,7 @@ public class MagitFileUtils {
     /**
      * Checks path validity (parent path exist and there is no folder with new repo name in it).
      * Exceptions will be thrown and propagated to the calling method if any problems found
+     *
      * @param requestedParentPath
      * @param newRepoName
      * @throws InvalidPathException
@@ -37,6 +40,7 @@ public class MagitFileUtils {
 
     /**
      * Should Be used only after path validation using the CreateNewRepoOnDisk_PathValidation() method!
+     *
      * @param newRepo
      * @throws IOException
      */
@@ -75,7 +79,7 @@ public class MagitFileUtils {
     }
 
 
-    public static void getFirstCommitFromWC(Repository repo){
+    public static void getFirstCommitFromWC(Repository repo) {
 
         SimpleDateFormat sdf = new SimpleDateFormat(Repository.DATE_FORMAT);
         String currentTime = sdf.format(System.currentTimeMillis());
@@ -107,9 +111,9 @@ public class MagitFileUtils {
                     MagitFolder currentFolder = new MagitFolder();
                     getFirstCommitFromWC_Rec(file, repo, currentFolder, currentTime);
                     repo.addObject(currentFolder);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(),currentTime);
+                    MagitObjMetadata fileData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(), currentTime);
                     parent.addObject(fileData);
-                } else  {   //is file
+                } else {   //is file
                     System.out.println("file:" + file.getCanonicalPath());
                     Blob fileContent = new Blob(file);
                     repo.addObject(fileContent);
@@ -123,13 +127,45 @@ public class MagitFileUtils {
     }
 
 
-    public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit){
+    public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit) throws FileNotFoundException {
+        Path magitFolderPath = repo.getMagitPath();
+        //verify .magit folder exist
+        if (Files.notExists(magitFolderPath))
+            throw new FileNotFoundException(".magit folder doesn't exist!");
 
-
+        //create "commit tree"
+        MagitFolder repoRoot = (MagitFolder) repo.getObject(commit.getRootFolderSha1());
     }
+
+    private static void traverseCommit_Rec(Repository repo, MagitObject object) throws IOException {
+        Path magitObjectsPath = repo.getObjectsPath();
+        Path objectPath = magitObjectsPath.resolve(object.calcSha1());
+        writeObjectToMagit(objectPath, object);
+
+        if (object instanceof MagitFolder) {
+            Set<Map.Entry<String, MagitObjMetadata>> objectsInFolder = ((MagitFolder) object).getObjectsAsEntrySet();
+            for (Map.Entry<String, MagitObjMetadata> currentObject : objectsInFolder) {
+                System.out.println(object.getKey() + ": " + object.getValue());
+            }
+        }
+    }
+
+
+
+
+    private static void writeObjectToMagit(Path objectPath, MagitObject object) throws IOException {
+        try (ObjectOutputStream out =
+                     new ObjectOutputStream(
+                             new FileOutputStream(objectPath.toString()))) {
+            out.writeObject(object);
+            out.flush();
+        }
+    }
+
 
     /**
      * test only!!!
+     *
      * @param branchToWrite
      * @param BranchesFolder
      * @throws IOException
