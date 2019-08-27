@@ -5,6 +5,7 @@ import engine.magitMemoryObjects.*;
 
 import java.io.*;
 import java.nio.file.*;
+import java.text.SimpleDateFormat;
 
 public class MagitFileUtils {
 
@@ -75,16 +76,22 @@ public class MagitFileUtils {
 
 
     public static void getFirstCommitFromWC(Repository repo){
+
+        SimpleDateFormat sdf = new SimpleDateFormat(Repository.DATE_FORMAT);
+        String currentTime = sdf.format(System.currentTimeMillis());
+
         File repoDir = new File(repo.getStringPath());
         MagitFolder repoRoot = new MagitFolder();
-        getFirstCommitFromWC_Rec(repoDir, repo, repoRoot);
+        getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
         repo.addObject(repoRoot);
-        Commit firstCommit = new Commit(repoRoot.calcSha1());
+        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, "First Commit", //todo ask user for the repo name
+                repo.getActiveUser(), currentTime);
+
         repo.addCommit(firstCommit);
     }
 
     //todo send instead only the objects map?
-    private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent) {
+    private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent, String currentTime) {
         try {
             File[] files = currentObject.listFiles();
             for (File file : files) {
@@ -97,15 +104,15 @@ public class MagitFileUtils {
                 if (file.isDirectory()) {
                     System.out.println("directory:" + file.getCanonicalPath());
                     MagitFolder currentFolder = new MagitFolder();
-                    getFirstCommitFromWC_Rec(file, repo, currentFolder);
+                    getFirstCommitFromWC_Rec(file, repo, currentFolder, currentTime);
                     repo.addObject(currentFolder);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser());
+                    MagitObjMetadata fileData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(),currentTime);
                     parent.addObject(fileData);
                 } else  {   //is file
                     System.out.println("file:" + file.getCanonicalPath());
                     Blob fileContent = new Blob(file);
                     repo.addObject(fileContent);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser());
+                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), currentTime);
                     parent.addObject(fileData);
                 }
             }
