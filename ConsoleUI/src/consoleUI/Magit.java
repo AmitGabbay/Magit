@@ -19,6 +19,7 @@ public class Magit {
 //        repo = createNewRepoFromScratch();
 //    }
 
+    //todo add support for seperate folder and repo names
     public void createNewRepoFromScratch() {
         Repository newRepo = null;
         String newRepoName = null;

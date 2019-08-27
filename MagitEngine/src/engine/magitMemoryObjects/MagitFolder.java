@@ -9,7 +9,7 @@ import java.util.TreeMap;
 public class MagitFolder implements MagitObject, MagitParentObject {
 
     private Map<String, MagitObjMetadata> objects;
-    private StringBuilder contentAsText;
+    private transient StringBuilder contentAsText;
 
     public MagitFolder() {
         objects = new TreeMap<>();

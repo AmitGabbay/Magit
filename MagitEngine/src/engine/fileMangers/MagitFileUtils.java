@@ -88,6 +88,7 @@ public class MagitFileUtils {
                 repo.getActiveUser(), currentTime);
 
         repo.addCommit(firstCommit);
+        System.out.println(firstCommit);
     }
 
     //todo send instead only the objects map?
@@ -121,6 +122,11 @@ public class MagitFileUtils {
         }
     }
 
+
+    public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit){
+
+
+    }
 
     /**
      * test only!!!

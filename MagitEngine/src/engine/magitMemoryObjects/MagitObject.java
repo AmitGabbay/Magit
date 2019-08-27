@@ -1,5 +1,7 @@
 package engine.magitMemoryObjects;
 
-public interface MagitObject {
+import java.io.Serializable;
+
+public interface MagitObject extends Serializable {
     String calcSha1();
 }

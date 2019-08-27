@@ -11,7 +11,7 @@ public class Commit implements MagitObject, MagitParentObject {
     private String creationTime;
     private String author;
 
-    private String content;
+    private transient String content;
 
     public Commit(String rootFolderSha1, String parentCommitSha1, String description, String author, String creationTime) {
 
@@ -37,5 +37,18 @@ public class Commit implements MagitObject, MagitParentObject {
 
     public String getRootFolderSha1() {
         return rootFolderSha1;
+    }
+
+    @Override
+    public String toString() {
+        return "Commit{" +
+                "rootFolderSha1='" + rootFolderSha1 + '\'' +
+                ", parentCommitSha1='" + parentCommitSha1 + '\'' +
+                ", anotherParentCommitSha1='" + anotherParentCommitSha1 + '\'' +
+                ", description='" + description + '\'' +
+                ", creationTime='" + creationTime + '\'' +
+                ", author='" + author + '\'' +
+                ", content='" + content + '\'' +
+                '}';
     }
 }
