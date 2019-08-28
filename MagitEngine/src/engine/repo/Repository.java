@@ -1,10 +1,9 @@
-package engine;
+package engine.repo;
 
 import engine.fileMangers.MagitFileUtils;
-import engine.fileMangers.RepoFileUtils;
-import engine.magitMemoryObjects.*;
+import engine.magitObjects.Commit;
+import engine.magitObjects.MagitObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;

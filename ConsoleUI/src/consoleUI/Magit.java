@@ -1,8 +1,8 @@
 package consoleUI;
 
-import engine.Repository;
-import engine.magitMemoryObjects.Commit;
-import engine.magitMemoryObjects.MagitObject;
+import engine.repo.Repository;
+import engine.magitObjects.Commit;
+import engine.magitObjects.MagitObject;
 import engine.fileMangers.MagitFileUtils;
 
 import java.io.IOException;

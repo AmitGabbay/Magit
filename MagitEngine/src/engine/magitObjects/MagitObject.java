@@ -1,4 +1,4 @@
-package engine.magitMemoryObjects;
+package engine.magitObjects;
 
 import java.io.Serializable;
 

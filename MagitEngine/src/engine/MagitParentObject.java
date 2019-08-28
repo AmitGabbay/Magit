@@ -1,4 +1,4 @@
-package engine.magitMemoryObjects;
+package engine;
 
 public interface MagitParentObject {
 }

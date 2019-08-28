@@ -1,7 +1,5 @@
 package consoleUI;
 
-import engine.magitMemoryObjects.MagitObjectType;
-
 import java.util.Scanner;
 
 public class MainMenu {

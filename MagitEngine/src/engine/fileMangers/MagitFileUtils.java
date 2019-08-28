@@ -1,7 +1,13 @@
 package engine.fileMangers;
 
-import engine.*;
-import engine.magitMemoryObjects.*;
+import engine.magitObjects.MagitObjMetadata;
+import engine.magitObjects.Blob;
+import engine.magitObjects.Commit;
+import engine.magitObjects.MagitFolder;
+import engine.magitObjects.MagitObject;
+import engine.repo.Branch;
+import engine.repo.RepoSettings;
+import engine.repo.Repository;
 
 import java.io.*;
 import java.nio.file.*;

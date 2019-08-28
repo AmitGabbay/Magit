@@ -1,4 +1,4 @@
-package engine.magitMemoryObjects;
+package engine.magitObjects;
 
 public enum MagitObjectType {
     FILE("File"), FOLDER("Folder");

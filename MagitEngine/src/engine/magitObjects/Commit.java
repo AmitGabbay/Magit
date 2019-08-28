@@ -1,5 +1,6 @@
-package engine.magitMemoryObjects;
+package engine.magitObjects;
 
+import engine.MagitParentObject;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class Commit implements MagitObject, MagitParentObject {

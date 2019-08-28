@@ -1,11 +1,10 @@
-package engine.magitMemoryObjects;
+package engine.magitObjects;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Objects;
 
 public class Blob implements  MagitObject {
