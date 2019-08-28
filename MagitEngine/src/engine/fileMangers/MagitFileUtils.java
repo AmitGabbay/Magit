@@ -6,8 +6,6 @@ import engine.magitMemoryObjects.*;
 import java.io.*;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
-import java.util.Map;
-import java.util.Set;
 
 public class MagitFileUtils {
 
@@ -79,7 +77,7 @@ public class MagitFileUtils {
     }
 
 
-    public static void getFirstCommitFromWC(Repository repo) {
+    public static Commit getFirstCommitFromWC(Repository repo, String newCommitDescription) {
 
         SimpleDateFormat sdf = new SimpleDateFormat(Repository.DATE_FORMAT);
         String currentTime = sdf.format(System.currentTimeMillis());
@@ -88,11 +86,23 @@ public class MagitFileUtils {
         MagitFolder repoRoot = new MagitFolder();
         getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
         repo.addObject(repoRoot);
-        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, "First Commit", //todo ask user for the repo name
+        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription, //todo ask user for the repo name
                 repo.getActiveUser(), currentTime);
 
         repo.addCommit(firstCommit);
+
+        //TEMPORARY!!!!
+        try {
+            repo.createMasterBranch_TESTINT_ONLY();
+        } catch (IOException e) {
+            System.out.println("fuck");
+            e.printStackTrace();
+        }
+        ///////
+
+        repo.getActiveBranch().setPointedCommit(firstCommit.calcSha1());
         System.out.println(firstCommit);
+        return firstCommit;
     }
 
     //todo send instead only the objects map?
@@ -127,7 +137,7 @@ public class MagitFileUtils {
     }
 
 
-    public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit) throws FileNotFoundException {
+    public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit) throws IOException {
         Path magitFolderPath = repo.getMagitPath();
         //verify .magit folder exist
         if (Files.notExists(magitFolderPath))
@@ -135,6 +145,12 @@ public class MagitFileUtils {
 
         //create "commit tree"
         MagitFolder repoRoot = (MagitFolder) repo.getObject(commit.getRootFolderSha1());
+        traverseCommit_Rec(repo, repoRoot);
+
+        Path newCommitPath = repo.getObjectsPath().resolve(commit.calcSha1());
+        writeObjectToMagit(newCommitPath, commit);
+        Branch activeBranch = repo.getActiveBranch();
+        writeBranchToDisk(activeBranch, repo.getBranchesPath());
     }
 
     private static void traverseCommit_Rec(Repository repo, MagitObject object) throws IOException {
@@ -143,15 +159,12 @@ public class MagitFileUtils {
         writeObjectToMagit(objectPath, object);
 
         if (object instanceof MagitFolder) {
-            Set<Map.Entry<String, MagitObjMetadata>> objectsInFolder = ((MagitFolder) object).getObjectsAsEntrySet();
-            for (Map.Entry<String, MagitObjMetadata> currentObject : objectsInFolder) {
-                System.out.println(object.getKey() + ": " + object.getValue());
+            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues() ) {
+                MagitObject currentObject = repo.getObject(objectData.getSha1());
+                traverseCommit_Rec(repo, currentObject);
             }
         }
     }
-
-
-
 
     private static void writeObjectToMagit(Path objectPath, MagitObject object) throws IOException {
         try (ObjectOutputStream out =

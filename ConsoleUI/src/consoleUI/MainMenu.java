@@ -10,7 +10,6 @@ public class MainMenu {
 
     public static void main(String[] args) {
 
-        System.out.println(MagitObjectType.FILE);
         System.out.println("Welcome to Magit!\n");
         boolean toEnd = false;
         do {
@@ -72,6 +71,10 @@ public class MainMenu {
 
             case CHANGE_REPO:
                 magit.changeRepo();
+                break;
+
+            case FIRST_COMMIT:
+                magit.firstCommit();
                 break;
 
             case PRINT_OBJECTS_TEST:

@@ -15,7 +15,7 @@ public class Repository {
 
     public final static String DATE_FORMAT = "dd.MM.yyyy-HH:mm:ss:SSS";
     private RepoSettings basicSettings;
-    private Set<Branch> branches;
+    private Map<String, Branch> branches;
     private Map<String, MagitObject> objects;
     private Map<String, Commit> commits;
 
@@ -26,17 +26,9 @@ public class Repository {
 
     private String activeUser = "Administrator";
 
-    public String getActiveUser() {
-        return activeUser;
-    }
-
-    public void setActiveUser(String newActiveUser) {
-        this.activeUser = newActiveUser;
-    }
-
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
-        this.branches = new HashSet<>();
+        this.branches = new HashMap<>();
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
         this.initializePaths();
@@ -61,7 +53,7 @@ public class Repository {
         MagitFileUtils.createNewRepoOnDisk(newRepo.getBasicSettings());
 
         Branch master = Branch.createMasterBranch();
-        newRepo.branches.add(master);
+        newRepo.branches.put("master", master);
         MagitFileUtils.writeBranchToDisk(master, newRepo.branchesPath);
         return newRepo;
     }
@@ -93,8 +85,8 @@ public class Repository {
         return basicSettings;
     }
 
-    public void traverseWC() {
-        MagitFileUtils.getFirstCommitFromWC(this);
+    public void traverseWC(String newCommitDescription) {
+        MagitFileUtils.getFirstCommitFromWC(this,newCommitDescription );
     }
 
     public Map<String, MagitObject> getObjectsAsMap() {
@@ -128,5 +120,24 @@ public class Repository {
     public Path getBranchesPath() {
         return branchesPath;
     }
+
+    public String getActiveUser() {
+        return activeUser;
+    }
+
+    public void setActiveUser(String newActiveUser) {
+        this.activeUser = newActiveUser;
+    }
+
+    public Branch getActiveBranch(){
+        return branches.get(basicSettings.getHeadBranch());
+    }
+
+    public void createMasterBranch_TESTINT_ONLY() throws IOException {
+        Branch master = Branch.createMasterBranch();
+        this.branches.put("master", master);
+        MagitFileUtils.writeBranchToDisk(master, this.branchesPath);
+    }
+
 
 }

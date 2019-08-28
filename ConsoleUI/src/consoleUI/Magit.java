@@ -1,7 +1,9 @@
 package consoleUI;
 
 import engine.Repository;
+import engine.magitMemoryObjects.Commit;
 import engine.magitMemoryObjects.MagitObject;
+import engine.fileMangers.MagitFileUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -77,7 +79,7 @@ public class Magit {
             return;
         }
 
-        this.repo.traverseWC();
+        this.repo.traverseWC("FirstCommit");
     }
 
     //todo verify error checking
@@ -95,6 +97,32 @@ public class Magit {
         this.repo = new Repository(repoName, repoPath);
         //todo to load data (remember to load the head branch!!!)
     }
+
+
+    public void firstCommit(){
+
+        String commitDescription;
+        Scanner scanner = new Scanner(System.in);
+        boolean finishInputLoop=false;
+        do {
+            System.out.println("Please enter a description for the new commit");
+            commitDescription = scanner.nextLine();
+            if (commitDescription.isEmpty())
+                System.out.println("Please enter a non-empty description.");
+            else{
+                finishInputLoop=true;
+                Commit newCommit = MagitFileUtils.getFirstCommitFromWC(this.repo, commitDescription);
+                try {
+                    MagitFileUtils.writeFirstCommitToMagitFolder(this.repo,newCommit);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } while (!finishInputLoop);
+    }
+
+
 
 
     /**

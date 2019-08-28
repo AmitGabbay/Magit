@@ -10,12 +10,13 @@ import java.util.Objects;
 public class Branch {
 
     @NotNull private String name;
+
     @NotNull private String pointedCommit;
 
     private boolean isRemote;
+
     private boolean tracking;
     private String trackingAfter;
-
     /**
      private ct'or to create initial master branch
      */
@@ -52,6 +53,10 @@ public class Branch {
 
     public String getPointedCommit() {
         return pointedCommit;
+    }
+
+    public void setPointedCommit(String pointedCommit) {
+        this.pointedCommit = pointedCommit;
     }
 
 }

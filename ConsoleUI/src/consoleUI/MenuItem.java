@@ -7,6 +7,7 @@ public enum MenuItem {
     NEW_REPO_SCRATCH(1,"Create new Magit repository"),
     TRAVERSE_WC(2,"Traverse WC"),
     CHANGE_REPO(3,"Change to existing Magit repository"),
+    FIRST_COMMIT(4, "First commit test"),
     PRINT_OBJECTS_TEST(777,"Test: print objects");
 
     public static final int EXIT_OPER_CODE = values().length + 1;

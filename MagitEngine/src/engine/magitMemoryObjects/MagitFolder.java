@@ -38,8 +38,8 @@ public class MagitFolder implements MagitObject, MagitParentObject {
         }
     }
 
-    public Set<Map.Entry<String, MagitObjMetadata>> getObjectsAsEntrySet() {
-        return objects.entrySet();
+    public Collection<MagitObjMetadata> getObjectsValues() {
+        return objects.values();
     }
 
 

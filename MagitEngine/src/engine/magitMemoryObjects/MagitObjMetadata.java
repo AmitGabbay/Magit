@@ -3,8 +3,9 @@ package engine.magitMemoryObjects;
 import engine.Repository;
 
 import java.io.File;
+import java.io.Serializable;
 
-public class MagitObjMetadata {
+public class MagitObjMetadata implements Serializable {
 
     private String name;
     private String sha1;
@@ -38,5 +39,9 @@ public class MagitObjMetadata {
 
     public String getName() {
         return name;
+    }
+
+    public String getSha1() {
+        return sha1;
     }
 }
