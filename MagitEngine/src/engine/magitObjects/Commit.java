@@ -5,12 +5,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 public class Commit implements MagitObject, MagitParentObject {
 
-    private String rootFolderSha1;
+    private final String rootFolderSha1;
     private String parentCommitSha1;
     private String anotherParentCommitSha1 = null;
-    private String description;
-    private String creationTime;
-    private String author;
+    private final String description;
+    private final String creationTime;
+    private final String author;
 
     private transient String content;
 
@@ -26,7 +26,7 @@ public class Commit implements MagitObject, MagitParentObject {
     }
 
     private String calcContent(){
-        return new StringBuilder(this.rootFolderSha1 + this.parentCommitSha1 +this.anotherParentCommitSha1+ this.description + this.creationTime + this.author).toString();
+        return this.rootFolderSha1 + this.parentCommitSha1 + this.anotherParentCommitSha1 + this.description + this.creationTime + this.author;
     }
 
     @Override

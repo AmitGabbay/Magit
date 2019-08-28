@@ -9,6 +9,7 @@ import engine.magitObjects.MagitFolder;
 import engine.magitObjects.MagitObject;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 
@@ -58,7 +59,7 @@ public class RepoFileUtils {
         final String fileToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
         try (Writer out = new BufferedWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(fileToWritePath), "UTF-8"))) {
+                        new FileOutputStream(fileToWritePath), StandardCharsets.UTF_8))) {
 
             out.write(branchToWrite.getPointedCommit());
         }

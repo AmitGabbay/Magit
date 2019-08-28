@@ -21,7 +21,7 @@ public enum MenuItem {
     public final int UI_OpNumber;
     public final String UI_Text;
 
-    private MenuItem(int UI_OpNumber, String UI_Text) {
+    MenuItem(int UI_OpNumber, String UI_Text) {
         this.UI_Text = UI_Text;
         this.UI_OpNumber = UI_OpNumber;
     }

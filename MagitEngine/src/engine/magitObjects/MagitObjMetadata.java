@@ -5,11 +5,11 @@ import java.io.Serializable;
 
 public class MagitObjMetadata implements Serializable {
 
-    private String name;
-    private String sha1;
-    private MagitObjectType objectType;
-    private String lastModifier;
-    private String lastModifiedTime;
+    private final String name;
+    private final String sha1;
+    private final MagitObjectType objectType;
+    private final String lastModifier;
+    private final String lastModifiedTime;
 
     public MagitObjMetadata(File file, String sha1, String lastModifier, String lastModifiedTime) {
 

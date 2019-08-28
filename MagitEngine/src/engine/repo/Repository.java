@@ -14,10 +14,10 @@ import java.util.*;
 public class Repository {
 
     public final static String DATE_FORMAT = "dd.MM.yyyy-HH:mm:ss:SSS";
-    private RepoSettings basicSettings;
-    private Map<String, Branch> branches;
-    private Map<String, MagitObject> objects;
-    private Map<String, Commit> commits;
+    private final RepoSettings basicSettings;
+    private final Map<String, Branch> branches;
+    private final Map<String, MagitObject> objects;
+    private final Map<String, Commit> commits;
 
     private Path repoPath;
     private Path magitPath;

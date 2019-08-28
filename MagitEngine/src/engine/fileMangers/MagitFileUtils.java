@@ -10,6 +10,7 @@ import engine.repo.RepoSettings;
 import engine.repo.Repository;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 
@@ -76,7 +77,7 @@ public class MagitFileUtils {
         final String fileToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
         try (Writer out = new BufferedWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(fileToWritePath), "UTF-8"))) {
+                        new FileOutputStream(fileToWritePath), StandardCharsets.UTF_8))) {
 
             out.write(branchToWrite.getPointedCommit());
         }
@@ -115,6 +116,9 @@ public class MagitFileUtils {
     private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent, String currentTime) {
         try {
             File[] files = currentObject.listFiles();
+            if (files==null)
+                 return;
+
             for (File file : files) {
 
                 //todo catch I/O ERROR OUTSIDE THE METHOD
@@ -123,6 +127,10 @@ public class MagitFileUtils {
                     continue;
 
                 if (file.isDirectory()) {
+                    //ignore empty folders (doesn't work on folder contains an empty folder...)
+                    if (!(file.list().length > 0))
+                        return;
+
                     System.out.println("directory:" + file.getCanonicalPath());
                     MagitFolder currentFolder = new MagitFolder();
                     getFirstCommitFromWC_Rec(file, repo, currentFolder, currentTime);
@@ -194,7 +202,7 @@ public class MagitFileUtils {
         final String fileToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
         try (Writer out = new BufferedWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(fileToWritePath), "UTF-8"))) {
+                        new FileOutputStream(fileToWritePath), StandardCharsets.UTF_8))) {
 
             out.write("ama");
         }

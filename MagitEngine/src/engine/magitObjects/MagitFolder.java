@@ -9,8 +9,8 @@ public class MagitFolder implements MagitObject, MagitParentObject {
 
 
 
-    private Map<String, MagitObjMetadata> objects;
-    private transient StringBuilder contentAsText;
+    private final Map<String, MagitObjMetadata> objects;
+    private final transient StringBuilder contentAsText;
 
     public MagitFolder() {
         objects = new TreeMap<>();
@@ -44,15 +44,13 @@ public class MagitFolder implements MagitObject, MagitParentObject {
     }
 
 
-
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MagitFolder that = (MagitFolder) o;
-        return objects.equals(that.objects) &&
-                contentAsText.equals(that.contentAsText);
+        return Objects.equals(objects, that.objects) &&
+                Objects.equals(contentAsText, that.contentAsText);
     }
 
     @Override

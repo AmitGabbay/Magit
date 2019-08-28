@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static Magit magit = new Magit();
+    private static final Magit magit = new Magit();
 
     public static void main(String[] args) {
 

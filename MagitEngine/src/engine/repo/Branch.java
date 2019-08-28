@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public class Branch {
 
-    @NotNull private String name;
+    @NotNull private final String name;
 
     @NotNull private String pointedCommit;
 
