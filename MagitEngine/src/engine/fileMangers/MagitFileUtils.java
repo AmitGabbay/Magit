@@ -74,14 +74,26 @@ public class MagitFileUtils {
 
     public static void writeBranchToDisk(Branch branchToWrite, Path BranchesFolder) throws IOException {
 
-        final String fileToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
+        final String BranchToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
         try (Writer out = new BufferedWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(fileToWritePath), StandardCharsets.UTF_8))) {
+                        new FileOutputStream(BranchToWritePath), StandardCharsets.UTF_8))) {
 
             out.write(branchToWrite.getPointedCommit());
         }
     }
+
+    public static void updateHeadFileOnDisk (Path BranchesFolder, String activeBranchName) throws IOException {
+
+        final String HeadFilePath = BranchesFolder.toString() + "/HEAD"; //todo verify that cannot be overwritten by a new branch
+        try (Writer out = new BufferedWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(HeadFilePath), StandardCharsets.UTF_8))) {
+
+            out.write(activeBranchName);
+        }
+    }
+
 
 
     public static Commit getFirstCommitFromWC(Repository repo, String newCommitDescription) {

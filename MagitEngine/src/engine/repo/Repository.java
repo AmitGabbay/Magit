@@ -23,16 +23,19 @@ public class Repository {
     private Path magitPath;
     private Path objectsPath;
     private Path branchesPath;
-
     private String activeUser = "Administrator";
 
-   // private RepoFileUtils fileUtils;
+    private Map<String, MagitObject> CurrentCommitObjects;
+
+
+    // private RepoFileUtils fileUtils;
 
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashMap<>();
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
+        this.CurrentCommitObjects = new HashMap<>();
         this.initializePaths();
         //this.fileUtils = new RepoFileUtils(path);
     }
@@ -58,6 +61,7 @@ public class Repository {
         Branch master = Branch.createMasterBranch();
         newRepo.branches.put("master", master);
         MagitFileUtils.writeBranchToDisk(master, newRepo.branchesPath);
+        MagitFileUtils.updateHeadFileOnDisk(newRepo.branchesPath, "master");
         return newRepo;
     }
 
@@ -141,6 +145,13 @@ public class Repository {
         this.branches.put("master", master);
         MagitFileUtils.writeBranchToDisk(master, this.branchesPath);
     }
+
+    public Commit getCurrentCommit() {
+        Branch activeBranch = getActiveBranch();
+        Commit currentCommit = commits.get(activeBranch.getPointedCommit());
+        return currentCommit;
+    }
+
 
 //
 //    public Commit getFirstCommitFromWC(String newCommitDescription) {
