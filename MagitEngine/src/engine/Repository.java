@@ -1,9 +1,10 @@
 package engine;
 
 import engine.fileMangers.MagitFileUtils;
-import engine.magitMemoryObjects.Commit;
-import engine.magitMemoryObjects.MagitObject;
+import engine.fileMangers.RepoFileUtils;
+import engine.magitMemoryObjects.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
@@ -26,12 +27,15 @@ public class Repository {
 
     private String activeUser = "Administrator";
 
+   // private RepoFileUtils fileUtils;
+
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashMap<>();
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
         this.initializePaths();
+        //this.fileUtils = new RepoFileUtils(path);
     }
 
     public static void checkNewRepoPath(String requestedParentPath, String newRepoName) throws InvalidPathException, FileAlreadyExistsException {
@@ -138,6 +142,65 @@ public class Repository {
         this.branches.put("master", master);
         MagitFileUtils.writeBranchToDisk(master, this.branchesPath);
     }
+
+//
+//    public Commit getFirstCommitFromWC(String newCommitDescription) {
+//
+//        fileUtils.updateNewCommitTime();
+//        File repoRootDir = new File(this.getStringPath());
+//        MagitFolder repoRoot = new MagitFolder();
+//        getFirstCommitFromWC_Rec(repoRootDir, repoRoot);
+//        addObject(repoRoot);
+//        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription,
+//                activeUser, fileUtils.getNewCommitTime());
+//
+//        addCommit(firstCommit);
+//
+//        //TEMPORARY!!!!
+//        try {
+//            createMasterBranch_TESTINT_ONLY();
+//        } catch (IOException e) {
+//            System.out.println("fuck");
+//            e.printStackTrace();
+//        }
+//        ///////
+//
+//        getActiveBranch().setPointedCommit(firstCommit.calcSha1());
+//        System.out.println(firstCommit);
+//        return firstCommit;
+//    }
+//
+//    private void getFirstCommitFromWC_Rec(File currentObject, MagitFolder parent) {
+//        try {
+//            File[] files = currentObject.listFiles();
+//            for (File file : files) {
+//
+//                //todo catch I/O ERROR OUTSIDE THE METHOD
+//
+//                if (file.isDirectory() && file.getName().equals(".magit"))  // TODO CREATE ANOTHER METHOD WITHOUT THIS?
+//                    continue;
+//
+//                if (file.isDirectory()) {
+//                    System.out.println("directory:" + file.getCanonicalPath());
+//                    MagitFolder currentFolder = new MagitFolder();
+//                    getFirstCommitFromWC_Rec(file, currentFolder);
+//                    this.addObject(currentFolder);
+//                    MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), activeUser, fileUtils.getNewCommitTime());
+//                    parent.addObjectData(folderData);
+//                } else {   //is file
+//                    System.out.println("file:" + file.getCanonicalPath());
+//                    Blob fileContent = new Blob(file);
+//                    this.addObject(fileContent);
+//                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), activeUser, fileUtils.getNewCommitTime());
+//                    parent.addObjectData(fileData);
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+
 
 
 }

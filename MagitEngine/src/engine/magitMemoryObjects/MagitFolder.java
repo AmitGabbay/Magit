@@ -16,7 +16,7 @@ public class MagitFolder implements MagitObject, MagitParentObject {
         contentAsText = new StringBuilder();
     }
 
-    public void addObject(MagitObjMetadata objData) {
+    public void addObjectData(MagitObjMetadata objData) {
         objects.put(objData.getName(), objData);
     }
 
