@@ -1,7 +1,10 @@
 package engine.repo;
 
 import engine.fileMangers.MagitFileUtils;
+import engine.fileMangers.RepoFileUtils;
 import engine.magitObjects.Commit;
+import engine.magitObjects.MagitFolder;
+import engine.magitObjects.MagitObjMetadata;
 import engine.magitObjects.MagitObject;
 
 import java.io.IOException;
@@ -25,19 +28,18 @@ public class Repository {
     private Path branchesPath;
     private String activeUser = "Administrator";
 
-    private Map<String, MagitObject> CurrentCommitObjects;
+    private Map<String, MagitObject> currentCommitObjects;
 
-
-    // private RepoFileUtils fileUtils;
+    private RepoFileUtils fileUtils;
 
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashMap<>();
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
-        this.CurrentCommitObjects = new HashMap<>();
+        this.currentCommitObjects = new HashMap<>();
         this.initializePaths();
-        //this.fileUtils = new RepoFileUtils(path);
+        this.fileUtils = new RepoFileUtils(path);
     }
 
     public static void checkNewRepoPath(String requestedParentPath, String newRepoName) throws InvalidPathException, FileAlreadyExistsException {
@@ -144,6 +146,7 @@ public class Repository {
         Branch master = Branch.createMasterBranch();
         this.branches.put("master", master);
         MagitFileUtils.writeBranchToDisk(master, this.branchesPath);
+        MagitFileUtils.updateHeadFileOnDisk(this.branchesPath, "master");
     }
 
     public Commit getCurrentCommit() {
@@ -152,6 +155,27 @@ public class Repository {
         return currentCommit;
     }
 
+    public void updateCurrentCommitObjects() {
+
+        this.currentCommitObjects.clear();
+        String repoRootSha1 = getCurrentCommit().getRootFolderSha1();
+        MagitFolder repoRoot = (MagitFolder) objects.get(repoRootSha1);
+
+        updateCurrentCommitObjects_Rec(repoRoot);
+
+        this.currentCommitObjects.put(repoRoot.calcSha1(), repoRoot);
+    }
+
+    public void updateCurrentCommitObjects_Rec(MagitObject object) {
+
+        if (object instanceof MagitFolder) {
+            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
+                MagitObject currentObject = this.getObject(objectData.getSha1());
+                updateCurrentCommitObjects_Rec(currentObject);
+            }
+        }
+        this.currentCommitObjects.put(object.calcSha1(), object);
+    }
 
 //
 //    public Commit getFirstCommitFromWC(String newCommitDescription) {

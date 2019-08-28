@@ -21,6 +21,12 @@ public class Magit {
 //        repo = createNewRepoFromScratch();
 //    }
 
+    public static void printNoDefinedRepoMsg() {
+        System.out.println("Error! Magit cannot perform this operation without a defined " +
+                "repository. \nPlease open an existing one or create a new one and then try again.");
+        System.out.println();
+    }
+
     //todo add support for separate folder and repo names
     public void createNewRepoFromScratch() {
         Repository newRepo = null;
@@ -72,7 +78,6 @@ public class Magit {
         this.repo = newRepo;
     }
 
-
     public void traverseWC() {
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
@@ -83,7 +88,7 @@ public class Magit {
     }
 
     //todo verify error checking
-    public void changeRepo(){
+    public void changeRepo() {
 
         Scanner scanner = new Scanner(System.in);
         String repoName, repoPath;
@@ -93,27 +98,26 @@ public class Magit {
 
         //todo ask user for setting a name
         int lastSlash = repoPath.lastIndexOf('\\');
-        repoName = repoPath.substring(lastSlash+1);
+        repoName = repoPath.substring(lastSlash + 1);
         this.repo = new Repository(repoName, repoPath);
         //todo to load data (remember to load the head branch!!!)
     }
 
-
-    public void firstCommit(){
+    public void firstCommit() {
 
         String commitDescription;
         Scanner scanner = new Scanner(System.in);
-        boolean finishInputLoop=false;
+        boolean finishInputLoop = false;
         do {
             System.out.println("Please enter a description for the new commit");
             commitDescription = scanner.nextLine();
             if (commitDescription.isEmpty())
                 System.out.println("Please enter a non-empty description.");
-            else{
-                finishInputLoop=true;
+            else {
+                finishInputLoop = true;
                 Commit newCommit = MagitFileUtils.getFirstCommitFromWC(this.repo, commitDescription);
                 try {
-                    MagitFileUtils.writeFirstCommitToMagitFolder(this.repo,newCommit);
+                    MagitFileUtils.writeFirstCommitToMagitFolder(this.repo, newCommit);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -122,15 +126,16 @@ public class Magit {
         } while (!finishInputLoop);
     }
 
-
-
+    public void testUpdateCommitObject() {
+        repo.updateCurrentCommitObjects();
+    }
 
     /**
      * testing only!!!
      */
-    public void printObject(){
+    public void printObject() {
         Set<Map.Entry<String, MagitObject>> objects = repo.getObjectsAsEntrySet();
-        for (Map.Entry<String, MagitObject> object: objects) {
+        for (Map.Entry<String, MagitObject> object : objects) {
             System.out.println(object.getKey() + ": " + object.getValue());
         }
 
@@ -140,7 +145,6 @@ public class Magit {
 //        for(MagitObject object : objects)
 //            System.out.println(object);
     }
-
 
     public boolean isRepoDefined() {
         return this.repo != null;
@@ -153,13 +157,6 @@ public class Magit {
             System.out.println("Located in: " + repo.getStringPath());
         } else
             System.out.println("N\\A");
-    }
-
-    public static void printNoDefinedRepoMsg()
-    {
-        System.out.println("Error! Magit cannot perform this operation without a defined " +
-                "repository. \nPlease open an existing one or create a new one and then try again.");
-        System.out.println();
     }
 }
 

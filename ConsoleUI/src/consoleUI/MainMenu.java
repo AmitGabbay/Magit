@@ -71,8 +71,12 @@ public class MainMenu {
                 magit.changeRepo();
                 break;
 
-            case FIRST_COMMIT:
+            case TEST_FIRST_COMMIT:
                 magit.firstCommit();
+                break;
+
+            case TEST_UPDATE_COMMIT_ON_REPO:
+                magit.testUpdateCommitObject();
                 break;
 
             case PRINT_OBJECTS_TEST:
