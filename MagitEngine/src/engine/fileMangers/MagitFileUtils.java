@@ -91,9 +91,11 @@ public class MagitFileUtils {
 
         File repoDir = new File(repo.getStringPath());
         MagitFolder repoRoot = new MagitFolder();
+        repoRoot.setHelperFields("<RepoRoot>", repo.getActiveUser(), currentTime);
+
         getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
         repo.addObject(repoRoot);
-        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription, //todo ask user for the repo name
+        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription,
                 repo.getActiveUser(), currentTime);
 
         repo.addCommit(firstCommit);
@@ -113,11 +115,11 @@ public class MagitFileUtils {
     }
 
     //todo send instead only the objects map?
-    private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent, String currentTime) {
+    private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent, String newCommitTime) {
         try {
             File[] files = currentObject.listFiles();
-            if (files==null)
-                 return;
+            if (files == null)
+                return;
 
             for (File file : files) {
 
@@ -133,15 +135,17 @@ public class MagitFileUtils {
 
                     System.out.println("directory:" + file.getCanonicalPath());
                     MagitFolder currentFolder = new MagitFolder();
-                    getFirstCommitFromWC_Rec(file, repo, currentFolder, currentTime);
+                    currentFolder.setHelperFields(parent.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
+                    getFirstCommitFromWC_Rec(file, repo, currentFolder, newCommitTime);
                     repo.addObject(currentFolder);
-                    MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(), currentTime);
+                    MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(), newCommitTime);
                     parent.addObjectData(folderData);
                 } else {   //is file
                     System.out.println("file:" + file.getCanonicalPath());
                     Blob fileContent = new Blob(file);
+                    fileContent.setHelperFields(parent.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
                     repo.addObject(fileContent);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), currentTime);
+                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), newCommitTime);
                     parent.addObjectData(fileData);
                 }
             }
@@ -149,7 +153,6 @@ public class MagitFileUtils {
             e.printStackTrace();
         }
     }
-
 
     public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit) throws IOException {
         Path magitFolderPath = repo.getMagitPath();
@@ -173,7 +176,7 @@ public class MagitFileUtils {
         writeObjectToMagit(objectPath, object);
 
         if (object instanceof MagitFolder) {
-            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues() ) {
+            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
                 MagitObject currentObject = repo.getObject(objectData.getSha1());
                 traverseCommit_Rec(repo, currentObject);
             }

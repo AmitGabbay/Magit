@@ -36,6 +36,31 @@ public class Commit implements MagitObject, MagitParentObject {
         return DigestUtils.sha1Hex(this.content);
     }
 
+    @Override
+    public String getPath() {
+        return null;
+    }
+    @Override
+    public void setPath(String path) {
+    }
+    @Override
+    public String getLastModifier() {
+        return null;
+    }
+    @Override
+    public void setLastModifier(String lastModifier) {
+    }
+    @Override
+    public String getLastModifiedTime() {
+        return null;
+    }
+    @Override
+    public void setLastModifiedTime(String lastModifiedTime) {
+    }
+    @Override
+    public void setHelperFields(String path, String lastModifier, String lastModifiedTime) {
+    }
+
     public String getRootFolderSha1() {
         return rootFolderSha1;
     }
@@ -52,4 +77,7 @@ public class Commit implements MagitObject, MagitParentObject {
                 ", content='" + content + '\'' +
                 '}';
     }
+
+
+
 }
