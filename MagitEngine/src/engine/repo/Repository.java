@@ -1,17 +1,18 @@
 package engine.repo;
 
 import engine.fileMangers.MagitFileUtils;
-import engine.fileMangers.RepoFileUtils;
 import engine.magitObjects.Commit;
 import engine.magitObjects.MagitFolder;
 import engine.magitObjects.MagitObjMetadata;
 import engine.magitObjects.MagitObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Repository {
@@ -31,6 +32,8 @@ public class Repository {
     private Map<String, MagitObject> currentCommitObjects;
 
     private RepoFileUtils fileUtils;
+    private WC_PendingChangesData wcPendingChanges;
+
 
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
@@ -40,6 +43,7 @@ public class Repository {
         this.currentCommitObjects = new HashMap<>();
         this.initializePaths();
         this.fileUtils = new RepoFileUtils(path);
+        this.wcPendingChanges = new WC_PendingChangesData();
     }
 
     public static void checkNewRepoPath(String requestedParentPath, String newRepoName) throws InvalidPathException, FileAlreadyExistsException {
@@ -163,7 +167,7 @@ public class Repository {
 
         updateCurrentCommitObjects_Rec(repoRoot);
 
-        this.currentCommitObjects.put(repoRoot.calcSha1(), repoRoot);
+        this.currentCommitObjects.put(repoRoot.calcSha1(), repoRoot); //put the root folder
     }
 
     public void updateCurrentCommitObjects_Rec(MagitObject object) {
@@ -235,6 +239,70 @@ public class Repository {
 //    }
 
 
+    private class RepoFileUtils {
+
+        private final Path repoPath;
+        private final Path magitPath;
+        private final Path objectsPath;
+        private final Path branchesPath;
+        private String newCommitTime;
+
+        public RepoFileUtils(String repoStringPath) {
+            this.repoPath = Paths.get(repoStringPath);
+            this.magitPath = repoPath.resolve(".magit");
+            this.objectsPath = magitPath.resolve("objects");
+            this.branchesPath = magitPath.resolve("branches");
+        }
+
+        public void updateNewCommitTime() {
+            SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+            this.newCommitTime = sdf.format(System.currentTimeMillis());
+        }
+
+        public Path getMagitPath() {
+            return magitPath;
+        }
+
+        public Path getRepoPath() {
+            return repoPath;
+        }
+
+        public Path getObjectsPath() {
+            return objectsPath;
+        }
+
+        public Path getBranchesPath() {
+            return branchesPath;
+        }
+
+        public String getNewCommitTime() {
+            return newCommitTime;
+        }
+
+        public Map<String, MagitObject> createWC_ObjectsMap(){
+            updateNewCommitTime();
+            Map<String, MagitObject> WC_Objects= new HashMap<>();
 
 
+            File repoDir = new File(repoPath.toString());
+            MagitFolder repoRoot = new MagitFolder();
+
+            //getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
+
+            String repoRootSha1 = repoRoot.calcSha1();
+            if (currentCommitObjects.containsKey(repoRoot.calcSha1())) //nothing changed at all
+                repoRoot = (MagitFolder) currentCommitObjects.get(repoRootSha1); //assign the repoRoot from the current commit
+            else
+            repoRoot.setHelperFields("<RepoRoot>", getActiveUser(), getNewCommitTime()); //put updated values for this repoRoot
+
+            WC_Objects.put(repoRoot.calcSha1(), repoRoot); //put the repoRoot folder in WC objects
+
+            return WC_Objects;
+
+        }
+
+
+
+
+    }
 }
