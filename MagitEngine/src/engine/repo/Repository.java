@@ -1,10 +1,7 @@
 package engine.repo;
 
 import engine.fileMangers.MagitFileUtils;
-import engine.magitObjects.Commit;
-import engine.magitObjects.MagitFolder;
-import engine.magitObjects.MagitObjMetadata;
-import engine.magitObjects.MagitObject;
+import engine.magitObjects.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,7 +96,7 @@ public class Repository {
     }
 
     public void traverseWC(String newCommitDescription) {
-        MagitFileUtils.getFirstCommitFromWC(this,newCommitDescription );
+        MagitFileUtils.getFirstCommitFromWC(this, newCommitDescription);
     }
 
     public Map<String, MagitObject> getObjectsAsMap() {
@@ -142,7 +139,7 @@ public class Repository {
         this.activeUser = newActiveUser;
     }
 
-    public Branch getActiveBranch(){
+    public Branch getActiveBranch() {
         return branches.get(basicSettings.getHeadBranch());
     }
 
@@ -279,10 +276,9 @@ public class Repository {
             return newCommitTime;
         }
 
-        public Map<String, MagitObject> createWC_ObjectsMap(){
+        public Map<String, MagitObject> createWC_ObjectsMap() {
             updateNewCommitTime();
-            Map<String, MagitObject> WC_Objects= new HashMap<>();
-
+            Map<String, MagitObject> WC_Objects = new HashMap<>();
 
             File repoDir = new File(repoPath.toString());
             MagitFolder repoRoot = new MagitFolder();
@@ -290,19 +286,65 @@ public class Repository {
             //getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
 
             String repoRootSha1 = repoRoot.calcSha1();
-            if (currentCommitObjects.containsKey(repoRoot.calcSha1())) //nothing changed at all
+            if (currentCommitObjects.containsKey(repoRootSha1)) //nothing changed at all
                 repoRoot = (MagitFolder) currentCommitObjects.get(repoRootSha1); //assign the repoRoot from the current commit
             else
-            repoRoot.setHelperFields("<RepoRoot>", getActiveUser(), getNewCommitTime()); //put updated values for this repoRoot
+                repoRoot.setHelperFields("<RepoRoot>", getActiveUser(), getNewCommitTime()); //put updated values for this repoRoot
 
             WC_Objects.put(repoRoot.calcSha1(), repoRoot); //put the repoRoot folder in WC objects
 
             return WC_Objects;
-
         }
 
+        public void createWC_ObjectsMap_Rec(Map<String, MagitObject> wcObjects, File currentObject, MagitFolder parentFolder) {
+
+            try {
+                File[] files = currentObject.listFiles();
+                if (files == null)
+                    return;
+
+                for (File file : files) {
+                    //todo catch I/O ERROR OUTSIDE THE METHOD
+                    if (file.isDirectory() && file.getName().equals(".magit"))  // TODO CREATE ANOTHER METHOD WITHOUT THIS?
+                        continue;
+
+                    if (file.isDirectory()) {
+                        //ignore empty folders (doesn't work on folder contains just an empty folder...)
+                        if (!(file.list().length > 0))
+                            return;
+
+                        //** Create the new folder and fill its contents (recursively) **
+                        //System.out.println("directory:" + file.getCanonicalPath());
+                        MagitFolder currentFolder = new MagitFolder();
+                        createWC_ObjectsMap_Rec(wcObjects, file, currentFolder);
+
+                        /* If the folder exist "as it" in the current commit, use that object.
+                           Else, add the folder metadata of a new object */
+                        String currentFolderSha1 = currentFolder.calcSha1();
+                        if (currentCommitObjects.containsKey(currentFolderSha1))
+                            currentFolder = (MagitFolder) currentCommitObjects.get(currentFolderSha1);
+                        else
+                            currentFolder.setHelperFields(parentFolder.getPath()+"/"+file.getName(), getActiveUser(), getNewCommitTime());
 
 
+
+                        repo.addObject(currentFolder);
+                        MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(), newCommitTime);
+                        parentFolder.addObjectData(folderData);
+                    } else {   //is file
+                        System.out.println("file:" + file.getCanonicalPath());
+                        Blob fileContent = new Blob(file);
+                        fileContent.setHelperFields(parentFolder.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
+                        repo.addObject(fileContent);
+                        MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), newCommitTime);
+                        parentFolder.addObjectData(fileData);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
 
     }
 }
