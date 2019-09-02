@@ -1,10 +1,6 @@
 package engine.fileMangers;
 
-import engine.magitObjects.MagitObjMetadata;
-import engine.magitObjects.Blob;
-import engine.magitObjects.Commit;
-import engine.magitObjects.MagitFolder;
-import engine.magitObjects.MagitObject;
+import engine.magitObjects.*;
 import engine.repo.Branch;
 import engine.repo.RepoSettings;
 import engine.repo.Repository;
@@ -195,7 +191,7 @@ public class MagitFileUtils {
         }
     }
 
-    private static void writeObjectToMagit(Path objectPath, MagitObject object) throws IOException {
+    private static void writeObjectToMagit(Path objectPath, Sha1Able object) throws IOException {
         try (ObjectOutputStream out =
                      new ObjectOutputStream(
                              new FileOutputStream(objectPath.toString()))) {

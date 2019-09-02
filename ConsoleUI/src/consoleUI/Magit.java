@@ -126,8 +126,8 @@ public class Magit {
         } while (!finishInputLoop);
     }
 
-    public void testUpdateCommitObject() {
-        repo.updateCurrentCommitObjects();
+    public void testUpdateCommitDatabases() {
+        repo.updateCurrentCommitDatabases();
     }
 
     /**

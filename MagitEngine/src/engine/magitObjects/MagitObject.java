@@ -2,18 +2,43 @@ package engine.magitObjects;
 
 import java.io.Serializable;
 
-public interface MagitObject extends Serializable {
-    String calcSha1();
+public abstract class MagitObject implements Sha1Able, Serializable {
 
-    //todo move that all to inheritance
-    String getPath();
-    void setPath(String path);
+    public abstract String calcSha1();
 
-    String getLastModifier();
-    void setLastModifier(String lastModifier);
+    private transient String path;
+    private transient String lastModifier;
+    private transient String lastModifiedTime;
 
-    String getLastModifiedTime();
-    void setLastModifiedTime(String lastModifiedTime);
+    public String getPath() {
+        return path;
+    }
 
-    void setHelperFields(String path, String lastModifier, String lastModifiedTime);
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getLastModifier() {
+        return lastModifier;
+    }
+
+    public void setLastModifier(String lastModifier) {
+        this.lastModifier = lastModifier;
+    }
+
+    public String getLastModifiedTime() {
+        return lastModifiedTime;
+    }
+
+    public void setLastModifiedTime(String lastModifiedTime) {
+        this.lastModifiedTime = lastModifiedTime;
+    }
+
+    public void setHelperFields(String path, String lastModifier, String lastModifiedTime)
+    {
+        this.setPath(path);
+        this.setLastModifier(lastModifier);
+        this.setLastModifiedTime(lastModifiedTime);
+    }
+
 }

@@ -25,6 +25,18 @@ public class MagitObjMetadata implements Serializable {
         this.lastModifiedTime = lastModifiedTime;
     }
 
+    public MagitObjMetadata(File file, MagitObject object) {
+        this.name = file.getName();
+        this.sha1 = object.calcSha1();
+
+        if (file.isDirectory())
+            this.objectType = MagitObjectType.FOLDER;
+        else // is File
+            this.objectType = MagitObjectType.FILE;
+
+        this.lastModifier = object.getLastModifier();
+        this.lastModifiedTime = object.getLastModifiedTime();
+    }
 
     @Override
     public String toString() {

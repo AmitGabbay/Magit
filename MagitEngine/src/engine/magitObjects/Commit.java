@@ -1,9 +1,8 @@
 package engine.magitObjects;
 
-import engine.MagitParentObject;
 import org.apache.commons.codec.digest.DigestUtils;
 
-public class Commit implements MagitObject, MagitParentObject {
+public class Commit implements Sha1Able {
 
     private final String rootFolderSha1;
     private String parentCommitSha1;
@@ -29,40 +28,15 @@ public class Commit implements MagitObject, MagitParentObject {
         return this.rootFolderSha1 + this.parentCommitSha1 + this.anotherParentCommitSha1 + this.description + this.creationTime + this.author;
     }
 
+    public String getRootFolderSha1() {
+        return rootFolderSha1;
+    }
+
     @Override
     public String calcSha1() {
 
         //calcContent();
         return DigestUtils.sha1Hex(this.content);
-    }
-
-    @Override
-    public String getPath() {
-        return null;
-    }
-    @Override
-    public void setPath(String path) {
-    }
-    @Override
-    public String getLastModifier() {
-        return null;
-    }
-    @Override
-    public void setLastModifier(String lastModifier) {
-    }
-    @Override
-    public String getLastModifiedTime() {
-        return null;
-    }
-    @Override
-    public void setLastModifiedTime(String lastModifiedTime) {
-    }
-    @Override
-    public void setHelperFields(String path, String lastModifier, String lastModifiedTime) {
-    }
-
-    public String getRootFolderSha1() {
-        return rootFolderSha1;
     }
 
     @Override

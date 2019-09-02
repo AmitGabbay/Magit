@@ -11,14 +11,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Repository {
 
     public final static String DATE_FORMAT = "dd.MM.yyyy-HH:mm:ss:SSS";
     private final RepoSettings basicSettings;
-    private final Map<String, Branch> branches;
-    private final Map<String, MagitObject> objects;
-    private final Map<String, Commit> commits;
+    private final Map<String, Branch> branches; //index is name
+    private final Map<String, MagitObject> objects; //index is sha1
+    private final Map<String, Commit> commits; //index is sha1
 
     private Path repoPath;
     private Path magitPath;
@@ -26,7 +27,8 @@ public class Repository {
     private Path branchesPath;
     private String activeUser = "Administrator";
 
-    private Map<String, MagitObject> currentCommitObjects;
+    private Map<String, MagitObject> currentCommitObjects; //index is sha1
+    private List<String> currentCommitPaths;
 
     private RepoFileUtils fileUtils;
     private WC_PendingChangesData wcPendingChanges;
@@ -38,6 +40,7 @@ public class Repository {
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
         this.currentCommitObjects = new HashMap<>();
+        this.currentCommitPaths = new ArrayList<>();
         this.initializePaths();
         this.fileUtils = new RepoFileUtils(path);
         this.wcPendingChanges = new WC_PendingChangesData();
@@ -156,7 +159,13 @@ public class Repository {
         return currentCommit;
     }
 
-    public void updateCurrentCommitObjects() {
+
+    public void updateCurrentCommitDatabases(){
+        updateCurrentCommitObjects();
+        updateCurrentCommitObjectsPaths();
+    }
+
+    private void updateCurrentCommitObjects() {
 
         this.currentCommitObjects.clear();
         String repoRootSha1 = getCurrentCommit().getRootFolderSha1();
@@ -167,7 +176,7 @@ public class Repository {
         this.currentCommitObjects.put(repoRoot.calcSha1(), repoRoot); //put the root folder
     }
 
-    public void updateCurrentCommitObjects_Rec(MagitObject object) {
+    private void updateCurrentCommitObjects_Rec(MagitObject object) {
 
         if (object instanceof MagitFolder) {
             for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
@@ -178,6 +187,15 @@ public class Repository {
         this.currentCommitObjects.put(object.calcSha1(), object);
     }
 
+    private void updateCurrentCommitObjectsPaths(){
+
+        currentCommitPaths = currentCommitObjects.values().stream()
+                .filter(object -> object instanceof Blob)
+                .map(object -> object.getPath())
+                .collect(Collectors.toList());
+
+        System.out.println(currentCommitPaths); //test!!!
+    }
 //
 //    public Commit getFirstCommitFromWC(String newCommitDescription) {
 //
@@ -309,12 +327,12 @@ public class Repository {
                         continue;
 
                     if (file.isDirectory()) {
-                        //ignore empty folders (doesn't work on folder contains just an empty folder...)
-                        if (!(file.list().length > 0))
-                            return;
 
-                        //** Create the new folder and fill its contents (recursively) **
+                        if (!(file.list().length > 0))  //ignore empty folders (doesn't work on folder contains just an empty folder...)
+                            return;
                         //System.out.println("directory:" + file.getCanonicalPath());
+
+                        // Create the new folder and fill its contents (recursively)
                         MagitFolder currentFolder = new MagitFolder();
                         createWC_ObjectsMap_Rec(wcObjects, file, currentFolder);
 
@@ -326,18 +344,19 @@ public class Repository {
                         else
                             currentFolder.setHelperFields(parentFolder.getPath()+"/"+file.getName(), getActiveUser(), getNewCommitTime());
 
-
-
-                        repo.addObject(currentFolder);
-                        MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(), newCommitTime);
+                        // Add the folder to the WC objects Map and add it's metadata to it's parent folder
+                        wcObjects.put(currentFolder.calcSha1(), currentFolder);
+                        MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder); //todo change to this c'tor in the create first commit
                         parentFolder.addObjectData(folderData);
-                    } else {   //is file
+                    }
+
+                    else {   //is file
                         System.out.println("file:" + file.getCanonicalPath());
                         Blob fileContent = new Blob(file);
-                        fileContent.setHelperFields(parentFolder.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
-                        repo.addObject(fileContent);
-                        MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), newCommitTime);
-                        parentFolder.addObjectData(fileData);
+                     //   fileContent.setHelperFields(parentFolder.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
+                     //   repo.addObject(fileContent);
+                    //    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), newCommitTime);
+                     //   parentFolder.addObjectData(fileData);
                     }
                 }
             } catch (IOException e) {
