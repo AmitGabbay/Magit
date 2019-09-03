@@ -49,5 +49,12 @@ public class WC_PendingChangesData {
             addNewFile(Paths.get(blobPath));
     }
 
-
+    @Override
+    public String toString() {
+        return "WC_PendingChangesData{" + "\n" +
+                "newFiles=" + newFiles + "\n" +
+                ", changedFiles=" + changedFiles + "\n" +
+                ", deletedFiles=" + deletedFiles +
+                '}';
+    }
 }

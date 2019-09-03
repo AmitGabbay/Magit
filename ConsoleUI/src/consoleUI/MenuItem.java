@@ -9,7 +9,9 @@ public enum MenuItem {
     CHANGE_REPO(3,"Change to existing Magit repository"),
     TEST_FIRST_COMMIT(4, "First commit test"),
     TEST_UPDATE_COMMIT_ON_REPO(5, "Update current commit Databases"),
+    TEST_GENERAL(666, "TEST - GENERAL"),
     PRINT_OBJECTS_TEST(777,"Test: print objects");
+
 
     public static final int EXIT_OPER_CODE = values().length + 1;
     private static final Map<Integer, MenuItem> ITEM_BY_NUM = new HashMap<>();

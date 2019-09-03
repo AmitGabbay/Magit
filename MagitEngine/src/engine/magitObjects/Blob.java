@@ -20,9 +20,10 @@ public class Blob extends MagitObject {
         }
         catch (IOException e) {
             e.printStackTrace(); //todo Notify in another way if not working in consoleUI
-            Random intGenerator = new Random(); //todo check separate values on different files
-            content = "Error! couldn't get this file content! \n" +
-                    " Generated random ID: " + intGenerator.nextInt();
+            Random intGenerator = new Random();
+            content = "Error! couldn't get this file content!\n" +
+                    "Generated random ID: " + intGenerator.nextInt();
+            System.out.println(content); //test
         }
    }
 

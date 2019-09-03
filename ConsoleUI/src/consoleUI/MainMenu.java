@@ -76,7 +76,11 @@ public class MainMenu {
                 break;
 
             case TEST_UPDATE_COMMIT_ON_REPO:
-                magit.testUpdateCommitDatabases();
+                magit.testNewCommitAndWCcalc();
+                break;
+
+            case TEST_GENERAL:
+                magit.myAmazingTesting();
                 break;
 
             case PRINT_OBJECTS_TEST:

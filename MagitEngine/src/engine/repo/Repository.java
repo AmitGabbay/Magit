@@ -169,6 +169,11 @@ public class Repository {
         updateCurrentCommitFilesPaths();
     }
 
+    public void TEST_updateWcDatabase()
+    {
+        fileUtils.createWcObjectsMapAndPendingChanges();
+    }
+
     private void updateCurrentCommitObjects() {
 
         this.currentCommitObjects = new HashMap<>();
@@ -183,8 +188,9 @@ public class Repository {
     private void updateCurrentCommitObjects_Rec(MagitObject object) {
 
         if (object instanceof MagitFolder) {
-            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
-                MagitObject currentObject = this.getObject(objectData.getSha1());
+            Collection<MagitObjMetadata> magitFolderContents = ((MagitFolder) object).getObjectsValues();
+            for (MagitObjMetadata objectData : magitFolderContents) {
+                MagitObject currentObject = this.getObject(objectData.getSha1()); //get object from the repo objects map
                 updateCurrentCommitObjects_Rec(currentObject);
             }
         }
@@ -322,6 +328,7 @@ public class Repository {
 
             File repoDir = new File(repoPath.toString());
             MagitFolder repoRootFolder = new MagitFolder();
+            repoRootFolder.setPath("<RepoRoot>");
             createWcObjectsMapAndPendingChanges_REC(repoDir, repoRootFolder); //traverse WC and get Objects map and pending changes
 
             String repoRootSha1 = repoRootFolder.calcSha1();
@@ -373,7 +380,8 @@ public class Repository {
 
                 // If the object is new/modified, add appropriate metadata
             else {
-                object.setHelperFields(parentFolder.getPath() + "/" + objectFile.getName(), getActiveUser(), getNewCommitTime());
+                String objectPath = parentFolder.getPath() + "/" + objectFile.getName();
+                object.setHelperFields(objectPath, getActiveUser(), getNewCommitTime());
                 // for new/modified files - add their path to the relevant WC Changes list
                 if (object instanceof Blob)
                     wcPendingChanges.addBlobToPendingChanges((Blob) object, currentCommitFilesPaths);
