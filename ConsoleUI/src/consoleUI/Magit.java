@@ -146,6 +146,16 @@ public class Magit {
 //            System.out.println(object);
     }
 
+    /**
+     * testing only!!!
+     */
+    public void printObjects2() {
+        repo.test123();
+    }
+
+
+
+
     public boolean isRepoDefined() {
         return this.repo != null;
     }

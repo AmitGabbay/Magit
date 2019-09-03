@@ -16,23 +16,25 @@ import java.util.stream.Collectors;
 public class Repository {
 
     public final static String DATE_FORMAT = "dd.MM.yyyy-HH:mm:ss:SSS";
+
     private final RepoSettings basicSettings;
     private final Map<String, Branch> branches; //index is name
     private final Map<String, MagitObject> objects; //index is sha1
     private final Map<String, Commit> commits; //index is sha1
 
+    private String activeUser = "Administrator";
+    private RepoFileUtils fileUtils;
+
     private Path repoPath;
     private Path magitPath;
     private Path objectsPath;
     private Path branchesPath;
-    private String activeUser = "Administrator";
 
     private Map<String, MagitObject> currentCommitObjects; //index is sha1
-    private Map<String, MagitObject> wcObjects; //index is sha1
     private Map<String, String> currentCommitFilesPaths; //<File Path, File Sha1>
-
-    private RepoFileUtils fileUtils;
+    private Map<String, MagitObject> wcObjects; //index is sha1
     private WC_PendingChangesData wcPendingChanges;
+
 
 
     public Repository(String name, String path) {
@@ -40,11 +42,11 @@ public class Repository {
         this.branches = new HashMap<>();
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
-        //this.currentCommitObjects = new HashMap<>();
-        //this.wcObjects = new HashMap<>();
-        //this.currentCommitPaths = new ArrayList<>();
-        this.initializePaths(); //todo get rid of it
         this.fileUtils = new RepoFileUtils(path);
+        this.initializePaths(); //todo get rid of it
+        //this.currentCommitObjects = new HashMap<>();
+        //this.currentCommitPaths = new ArrayList<>();
+        //this.wcObjects = new HashMap<>();
         //this.wcPendingChanges = new WC_PendingChangesData();
     }
 
@@ -162,7 +164,7 @@ public class Repository {
     }
 
 
-    public void updateCurrentCommitDatabases(){
+    public void updateCurrentCommitDatabases() {
         updateCurrentCommitObjects();
         updateCurrentCommitFilesPaths();
     }
@@ -189,20 +191,31 @@ public class Repository {
         this.currentCommitObjects.put(object.calcSha1(), object);
     }
 
-    private void updateCurrentCommitFilesPaths(){
+    private void updateCurrentCommitFilesPaths() {
 
         currentCommitFilesPaths = currentCommitObjects.values().stream()
-               .filter(object -> object instanceof Blob)
-               .collect(Collectors.toMap(MagitObject::getPath, MagitObject::calcSha1));
+                .filter(object -> object instanceof Blob)
+                .collect(Collectors.toMap(MagitObject::getPath, MagitObject::calcSha1));
+
+        System.out.println(currentCommitFilesPaths); //test!!!
 
 //        currentCommitPaths = currentCommitObjects.values().stream()
 //                .filter(object -> object instanceof Blob)
 //                .map(object -> object.getPath())
 //                .collect(Collectors.toList());
 
-        System.out.println(currentCommitFilesPaths); //test!!!
     }
-//
+
+
+    public void test123(){
+        System.out.println(objects);
+        System.out.println(currentCommitObjects);
+        System.out.println(currentCommitFilesPaths);
+        System.out.println(wcObjects);
+        System.out.println(wcPendingChanges);
+    }
+
+ //
 //    public Commit getFirstCommitFromWC(String newCommitDescription) {
 //
 //        fileUtils.updateNewCommitTime();
@@ -300,111 +313,65 @@ public class Repository {
             return newCommitTime;
         }
 
-        public void createWC_ObjectsMap() {
+
+        public void createWcObjectsMapAndPendingChanges() {
+
             updateNewCommitTime();
             wcObjects = new HashMap<>();
             wcPendingChanges = new WC_PendingChangesData();
 
             File repoDir = new File(repoPath.toString());
-            MagitFolder repoRoot = new MagitFolder();
+            MagitFolder repoRootFolder = new MagitFolder();
+            createWcObjectsMapAndPendingChanges_REC(repoDir, repoRootFolder); //traverse WC and get Objects map and pending changes
 
-            //getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
-
-            String repoRootSha1 = repoRoot.calcSha1();
-            if (currentCommitObjects.containsKey(repoRootSha1)) //nothing changed at all
-                repoRoot = (MagitFolder) currentCommitObjects.get(repoRootSha1); //assign the repoRoot from the current commit
+            String repoRootSha1 = repoRootFolder.calcSha1();
+            //if nothing changed at all, use the existing repoRootFolder from the current commit
+            if (currentCommitObjects.containsKey(repoRootSha1))
+                repoRootFolder = (MagitFolder) currentCommitObjects.get(repoRootSha1);
+                // If there are changes, add appropriate metadata
             else
-                repoRoot.setHelperFields("<RepoRoot>", getActiveUser(), getNewCommitTime()); //put updated values for this repoRoot
+                repoRootFolder.setHelperFields("<RepoRoot>", getActiveUser(), getNewCommitTime());
 
-            wcObjects.put(repoRoot.calcSha1(), repoRoot); //put the repoRoot folder in WC objects
-
+            wcObjects.put(repoRootFolder.calcSha1(), repoRootFolder); //put the repoRootFolder to WC objects
         }
 
-        public void createWC_ObjectsMap_Rec(File currentObject, MagitFolder parentFolder) {
+        private void createWcObjectsMapAndPendingChanges_REC(File currentFolderFile, MagitFolder parentFolder) {
 
-            try {
-                File[] files = currentObject.listFiles();
-                if (files == null)
-                    return;
+            File[] filesList = currentFolderFile.listFiles();
+            if (filesList == null) //a fallback
+                return;
 
-                for (File file : files) {
-                    //todo catch I/O ERROR OUTSIDE THE METHOD
-                    if (file.isDirectory() && file.getName().equals(".magit"))  // TODO CREATE ANOTHER METHOD WITHOUT THIS?
+            for (File objectFile : filesList) {
+
+                if (objectFile.isDirectory()) {
+                    //todo check that works (also on empty folder - verify an array with 0 entries returned
+                    //todo replace objectFile.list().length with filesList.length
+                    if (!(objectFile.list().length > 0))  //ignore empty folders (doesn't work on folder contains just an empty folder...)
+                        return;
+                    if (objectFile.getName().equals(".magit")) //ignore Magit system folder (Continue to next file/folder)
                         continue;
 
-                    if (file.isDirectory()) {
-
-                        if (!(file.list().length > 0))  //ignore empty folders (doesn't work on folder contains just an empty folder...)
-                            return;
-                        //System.out.println("directory:" + file.getCanonicalPath());
-
-                        // Create the new folder and fill its contents (recursively)
-                        MagitFolder currentFolder = new MagitFolder();
-                        createWC_ObjectsMap_Rec(file, currentFolder);
-                        /* If the folder exist "as it" in the current commit, use that folder.
-                           Else, add the folder metadata of a new object */
-                        currentFolder = (MagitFolder) wcObjectDataChecker(currentFolder, file, parentFolder.getPath());
-
-
-                        // Add the folder to the WC objects Map and add it's metadata to it's parent folder
-                        /*todo to another method*/
-                        wcObjects.put(currentFolder.calcSha1(), currentFolder);
-                        MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder); //todo change to this c'tor in the create first commit
-                        parentFolder.addObjectData(folderData);
-                    }
-
-                    else {   //is file
-                        //System.out.println("file:" + file.getCanonicalPath());
-
-                        Blob currentBlob = new Blob(file);
-                        //currentBlob = (Blob) wcObjectDataChecker(currentBlob, file, parentFolder.getPath());
-                        String fileContentSha1 = currentBlob.calcSha1();
-                        if (currentCommitObjects.containsKey(fileContentSha1))
-                            currentBlob = (Blob) currentCommitObjects.get(fileContentSha1);
-                        else {
-                            currentBlob.setHelperFields(parentFolder.getPath() + "/" + file.getName(), getActiveUser(), getNewCommitTime());
-                            wcPendingChanges.addBlobToPendingChanges(currentBlob, currentCommitFilesPaths);
-                        }
-
-                        //todo to another method
-                        wcObjects.put(currentBlob.calcSha1(), currentBlob);
-                        MagitObjMetadata fileData = new MagitObjMetadata(file, currentBlob);
-                        parentFolder.addObjectData(fileData);
-                    }
+                    //System.out.println("directory:" + file.getCanonicalPath());
+                    MagitFolder currentFolder = new MagitFolder();
+                    createWcObjectsMapAndPendingChanges_REC(objectFile, currentFolder); // Fill the new folder contents (recursively)
+                    finalizeWcObjectCreation(currentFolder, objectFile, parentFolder);
+                } else {   //is file
+                    //System.out.println("file:" + file.getCanonicalPath());
+                    Blob currentBlob = new Blob(objectFile);
+                    finalizeWcObjectCreation(currentBlob, objectFile, parentFolder);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
 
+        private void finalizeWcObjectCreation(MagitObject object, File objectFile, MagitFolder parentFolder) {
 
-
-        /**
-         * Check if the given MagitObject already exists in the current commit (same sha1). If it is, point it the
-         * existing one. If not, add the object updated metadata.
-         * @param object to check if already exists (and to return)
-         * @param objectFile
-         * @param parentFolderPath
-         * @return The final object, which is the existing one on in the current commit or a new one with updated helper fields
-         */
-        private MagitObject wcObjectDataChecker(MagitObject object, File objectFile, String parentFolderPath){
-            String currentObjectSha1 = object.calcSha1();
-            if (currentCommitObjects.containsKey(currentObjectSha1))
-                object = currentCommitObjects.get(currentObjectSha1);
-            else
-                object.setHelperFields(parentFolderPath+"/"+objectFile.getName(), getActiveUser(), getNewCommitTime());
-            return object;
-        }
-
-        private void finalizeWcObjectCreation(MagitObject object, File objectFile, MagitFolder parentFolder){
-
-            String currentObjectSha1 = object.calcSha1();
+            String objectSha1 = object.calcSha1();
 
             // If the object exist "as it" in the current commit, use the existing one.
-            if (currentCommitObjects.containsKey(currentObjectSha1))
-                object = currentCommitObjects.get(currentObjectSha1);
+            if (currentCommitObjects.containsKey(objectSha1))
+                object = currentCommitObjects.get(objectSha1);
 
-            // If the object is new/modified, add appropriate metadata
+                // If the object is new/modified, add appropriate metadata
             else {
                 object.setHelperFields(parentFolder.getPath() + "/" + objectFile.getName(), getActiveUser(), getNewCommitTime());
                 // for new/modified files - add their path to the relevant WC Changes list
@@ -418,6 +385,23 @@ public class Repository {
             parentFolder.addObjectData(objectData);
         }
 
+//        /**
+//         * Check if the given MagitObject already exists in the current commit (same sha1). If it is, point it the
+//         * existing one. If not, add the object updated metadata.
+//         * @param object to check if already exists (and to return)
+//         * @param objectFile
+//         * @param parentFolderPath
+//         * @return The final object, which is the existing one on in the current commit or a new one with updated helper fields
+//         */
+//        private MagitObject wcObjectDataChecker(MagitObject object, File objectFile, String parentFolderPath){
+//            String currentObjectSha1 = object.calcSha1();
+//            if (currentCommitObjects.containsKey(currentObjectSha1))
+//                object = currentCommitObjects.get(currentObjectSha1);
+//            else
+//                object.setHelperFields(parentFolderPath+"/"+objectFile.getName(), getActiveUser(), getNewCommitTime());
+//            return object;
+
+//        }
 
     }
 }
