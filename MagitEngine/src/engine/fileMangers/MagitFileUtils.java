@@ -108,15 +108,6 @@ public class MagitFileUtils {
 
         repo.addCommit(firstCommit);
 
-        //TEMPORARY!!!!
-        try {
-            repo.createMasterBranch_TESTINT_ONLY();
-        } catch (IOException e) {
-            System.out.println("fuck");
-            e.printStackTrace();
-        }
-        ///////
-
         repo.getActiveBranch().setPointedCommit(firstCommit.calcSha1());
         System.out.println(firstCommit);
         return firstCommit;

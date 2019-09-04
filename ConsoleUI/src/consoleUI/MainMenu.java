@@ -63,8 +63,8 @@ public class MainMenu {
             case NEW_REPO_SCRATCH:
                 magit.createNewRepoFromScratch();
                 break;
-            case TRAVERSE_WC:
-                magit.traverseWC();
+            case SHOW_STATUS:
+                magit.checkWcStatus();
                 break;
 
             case CHANGE_REPO:
@@ -75,8 +75,8 @@ public class MainMenu {
                 magit.firstCommit();
                 break;
 
-            case TEST_UPDATE_COMMIT_ON_REPO:
-                magit.testNewCommitAndWCcalc();
+            case Commit:
+                magit.commit();
                 break;
 
             case TEST_GENERAL:

@@ -1,5 +1,6 @@
 package engine.repo;
 
+import com.sun.deploy.security.SelectableSecurityManager;
 import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -35,15 +36,19 @@ public class Repository {
     private Map<String, MagitObject> wcObjects; //index is sha1
     private Map<Path, String> currentCommitFilesPaths; //<File Path, File Sha1>, current commit files path-sha1 table
     private Map<Path, String> wcFilesPaths; //<File Path, File Sha1>, wc files path-sha1 table
+
     private WC_PendingChangesData wcPendingChanges;
 
+    private boolean pendingChangesWaiting; //an "OK switch" for doing a new commit.
 
+    // Set "true" only by checkForWcPendingChanges method
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashMap<>();
         this.objects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
         this.fileUtils = new RepoFileUtils(path);
+        this.pendingChangesWaiting = false;
         this.initializePaths(); //todo get rid of it
     }
 
@@ -72,6 +77,16 @@ public class Repository {
         return newRepo;
     }
 
+    public WC_PendingChangesData getWcPendingChanges() {
+        return wcPendingChanges;
+    }
+
+    public boolean isPendingChangesWaiting() {
+        return pendingChangesWaiting;
+    }
+
+    public boolean isNoCommits() {return commits.isEmpty();}
+
     private void initializePaths() {
         this.repoPath = Paths.get(this.getStringPath());
         this.magitPath = repoPath.resolve(".magit");
@@ -83,6 +98,7 @@ public class Repository {
         this.objects.put(object.calcSha1(), object);
     }
 
+    //todo use inside larger method
     public void addCommit(Commit commit) {
         this.commits.put(commit.calcSha1(), commit);
     }
@@ -147,6 +163,7 @@ public class Repository {
         return branches.get(basicSettings.getHeadBranch());
     }
 
+
     public void createMasterBranch_TESTINT_ONLY() throws IOException {
         Branch master = Branch.createMasterBranch();
         this.branches.put("master", master);
@@ -164,6 +181,46 @@ public class Repository {
         fileUtils.createWcDatabases();
     }
 
+    public boolean checkForWcPendingChanges() {
+
+        boolean anyChanges=false;
+        if (isNoCommits()) {
+            if (!fileUtils.isWcEmpty())
+                anyChanges = true;
+        }
+        //for Repo with existing commits
+        else // todo verify to build currentCommitDatabases on repo loading from file/xml
+            anyChanges = fileUtils.createWcDatabases();
+
+        // If any changes waiting, set the "OK Switch" for new commit
+        if (anyChanges)
+            this.pendingChangesWaiting = true;
+
+        return anyChanges;
+    }
+
+    /**
+     * This method needs the checkForWcPendingChanges methods to work before it and activate
+     * it's "OK switch" - the "pendingChangesWaiting" field. Else, an exception is thrown.
+     *
+     * @param commitDescription The new commit description from the user
+     * @throws Exception "Ok switch" is false or another general error form inner method call
+     */
+    public void newCommit(String commitDescription) throws Exception {
+        if (!this.pendingChangesWaiting)
+            throw new Exception("Cannot commit! Please check for pending changes again!");
+
+        if (commits.isEmpty())
+            MagitFileUtils.getFirstCommitFromWC(this, commitDescription);
+
+        else{
+            System.out.println("Imagine I commited");
+        }
+
+        createCurrentCommitDatabases();
+        this.pendingChangesWaiting=false;
+
+    }
 
     public void createCurrentCommitDatabases() {
 
@@ -327,19 +384,41 @@ public class Repository {
         }
 
 
-        public void createWcDatabases() {
+        /**
+         * This method assumes the integrity of the repo path!
+         * @return True if WC is empty (only .magit folder exists), False otherwise.
+         */
+        public boolean isWcEmpty(){
+            File repoDir = new File(repoPath.toString());
+            if(repoDir.list().length==1)
+                return true;
+
+            else
+                return false;
+        }
+
+        //returns True if any pending changes found, else otherwise.
+        public boolean createWcDatabases() {
 
             updateNewCommitTime();
             wcObjects = new HashMap<>();
             wcFilesPaths = new HashMap<>();
 
             File repoDir = new File(repoPath.toString());
-            MagitFolder repoRootFolder = new MagitFolder();
-            createWcDatabases_REC(repoDir, repoRootFolder); //traverse WC and get Objects map and pending changes
+            MagitFolder wcRootFolder = new MagitFolder();
+            createWcDatabases_REC(repoDir, wcRootFolder); //traverse WC and get Objects map and pending changes
 
-            wcObjects.put(repoRootFolder.calcSha1(), repoRootFolder); //put the repoRootFolder to WC objects
+            String wcRootFolderSha1 = wcRootFolder.calcSha1();
+            wcObjects.put(wcRootFolderSha1, wcRootFolder); //put the wcRootFolder to WC objects
+
+            //Check if there are any changes between current commit and the Wc
+            String currentCommitRootFolderSha1  = getCurrentCommit().getRootFolderSha1();
+            if (wcRootFolderSha1.equals(currentCommitRootFolderSha1))
+                return false;
+
             System.out.println(wcFilesPaths); //test
-            wcPendingChanges = new WC_PendingChangesData(); //TEST
+            wcPendingChanges = new WC_PendingChangesData(); //Create WC files change lists
+            return true; //there are changes
         }
 
         private void createWcDatabases_REC(File parentFolderFile, MagitFolder parentFolder) {
@@ -411,9 +490,9 @@ public class Repository {
             this.newFiles = CollectionUtils.subtract(wcFilesPaths.keySet(), currentCommitFilesPaths.keySet());
             this.deletedFiles = CollectionUtils.subtract(currentCommitFilesPaths.keySet(), wcFilesPaths.keySet());
             this.changedFiles = createChangedFilesPathList();
-            System.out.println("Added: " + newFiles);
-            System.out.println("Changed: " + changedFiles);
-            System.out.println("Deleted: " + deletedFiles);
+            //System.out.println("Added: " + newFiles);
+            //System.out.println("Changed: " + changedFiles);
+            //System.out.println("Deleted: " + deletedFiles);
         }
 
         private Collection<Path> createChangedFilesPathList() {
@@ -426,43 +505,32 @@ public class Repository {
             return changeList;
         }
 
+        @Override
+        public String toString() {
+            return "Pending changes to commit: " + "\n" +
+                    "New Files: " + newFiles + "\n" +
+                    "Changed Files: " + changedFiles + "\n" +
+                    "Deleted Files: " + deletedFiles + "\n";
+        }
+
         //    public void clearData() {
         //        newFiles.clear();
         //        changedFiles.clear();
         //        deletedFiles.clear();
         //    }
 
-        public void addNewFile(Path newFilePath) {
-            newFiles.add(newFilePath);
-        }
+//        public void addNewFile(Path newFilePath) {
+//            newFiles.add(newFilePath);
+//        }
+//
+//        public void addChangedFile(Path changedFilePath) {
+//            changedFiles.add(changedFilePath);
+//        }
+//
+//        public void addDeletedFile(Path deletedFilePath) {
+//            deletedFiles.add(deletedFilePath);
+//        }
 
-        public void addChangedFile(Path changedFilePath) {
-            changedFiles.add(changedFilePath);
-        }
-
-        public void addDeletedFile(Path deletedFilePath) {
-            deletedFiles.add(deletedFilePath);
-        }
-
-        @Override
-        public String toString() {
-            return "WC_PendingChangesData{" + "\n" +
-                    "newFiles=" + newFiles + "\n" +
-                    ", changedFiles=" + changedFiles + "\n" +
-                    ", deletedFiles=" + deletedFiles +
-                    '}';
-        }
-
-        //    @Deprecated
-        //    public void addBlobToPendingChanges(Blob blob, Map<String, String> currentCommitFilesPaths) {
-        //        String blobPath = blob.getPath();
-        //        if (currentCommitFilesPaths.containsKey(blobPath)) // Changed file
-        //        {
-        //            String oldFileSha1 = currentCommitFilesPaths.get(blobPath);
-        //            addChangedFile(Paths.get(blobPath), oldFileSha1);
-        //        } else // New file
-        //            addNewFile(Paths.get(blobPath));
-        //    }
 
 
     }

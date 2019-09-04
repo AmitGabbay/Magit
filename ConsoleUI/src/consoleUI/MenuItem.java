@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum MenuItem {
-    NEW_REPO_SCRATCH(1,"Create new Magit repository"),
-    TRAVERSE_WC(2,"Traverse WC"),
-    CHANGE_REPO(3,"Change to existing Magit repository"),
-    TEST_FIRST_COMMIT(4, "First commit test"),
-    TEST_UPDATE_COMMIT_ON_REPO(5, "Update current commit Databases"),
+    NEW_REPO_SCRATCH(11,"Create new Magit repository"),
+    SHOW_STATUS(12,"Show Status (WC Pending changes)"),
+    CHANGE_REPO(13,"Change to existing Magit repository"),
+    Commit(14, "Commit"),
+    TEST_FIRST_COMMIT(99, "First commit test"),
     TEST_GENERAL(666, "TEST - GENERAL"),
     TEST_GENERAL2(667, "TEST - GENERAL2"),
     PRINT_OBJECTS_TEST(777,"Test: print objects");

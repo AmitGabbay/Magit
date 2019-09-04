@@ -21,6 +21,7 @@ public class Magit {
 //        repo = createNewRepoFromScratch();
 //    }
 
+
     public static void printNoDefinedRepoMsg() {
         System.out.println("Error! Magit cannot perform this operation without a defined " +
                 "repository. \nPlease open an existing one or create a new one and then try again.");
@@ -78,16 +79,8 @@ public class Magit {
         this.repo = newRepo;
     }
 
-    public void traverseWC() {
-        if (!isRepoDefined()) {
-            printNoDefinedRepoMsg();
-            return;
-        }
-
-        this.repo.traverseWC("FirstCommit");
-    }
-
     //todo verify error checking
+
     public void changeRepo() {
 
         Scanner scanner = new Scanner(System.in);
@@ -101,8 +94,39 @@ public class Magit {
         repoName = repoPath.substring(lastSlash + 1);
         this.repo = new Repository(repoName, repoPath);
         //todo to load data (remember to load the head branch!!!)
+
+        //TEMPORARY!!!!
+        try {
+            repo.createMasterBranch_TESTINT_ONLY();
+        } catch (IOException e) {
+            System.out.println("fuck");
+            e.printStackTrace();
+        }
+        ///////
     }
 
+    public void checkWcStatus() {
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        boolean anyChanges = repo.checkForWcPendingChanges();
+
+        if (anyChanges) {
+            if (repo.isNoCommits()) //todo support pending changes on first commit also
+                System.out.println("Support for first commit will be added soon");
+            else
+                System.out.println(repo.getWcPendingChanges());
+        }
+
+        else
+            System.out.println("There are no pending changes for commit");
+    }
+
+
+
+    @Deprecated
     public void firstCommit() {
 
         String commitDescription;
@@ -126,10 +150,50 @@ public class Magit {
         } while (!finishInputLoop);
     }
 
-    public void testNewCommitAndWCcalc() {
-      //  repo.updateCurrentCommitDatabases();
-       // repo.TEST_updateWcDatabases();
-        System.out.println("not operative for now!");
+
+
+
+
+
+
+
+    public void commit() {
+
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        checkWcStatus();
+        if (!repo.isPendingChangesWaiting()) {
+            System.out.println("Cannot commit if there isn't something new... Please try again later");
+            return;
+        }
+
+        String commitDescription;
+        Scanner scanner = new Scanner(System.in);
+        boolean finishInputLoop = false;
+        do {
+            System.out.println("Please enter a description for the new commit:");
+            commitDescription = scanner.nextLine();
+            if (commitDescription.isEmpty())
+                System.out.println("Please enter a non-empty description.");
+            else {
+                finishInputLoop = true;
+                try {
+                    repo.newCommit(commitDescription);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    System.out.println();
+                }
+//                try {
+//                    MagitFileUtils.writeFirstCommitToMagitFolder(this.repo, newCommit);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+            }
+
+        } while (!finishInputLoop);
     }
 
     /**
