@@ -40,6 +40,7 @@ public class MagitFolder extends MagitObject {
         return objects.values();
     }
 
+    public MagitObjMetadata getObjMetadataByName(String objName) {return objects.get(objName);}
 
     @Override
     public boolean equals(Object o) {

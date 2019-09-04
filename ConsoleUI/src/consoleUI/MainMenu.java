@@ -80,7 +80,11 @@ public class MainMenu {
                 break;
 
             case TEST_GENERAL:
-                magit.myAmazingTesting();
+                magit.my666();
+                break;
+
+            case TEST_GENERAL2:
+                magit.my667();
                 break;
 
             case PRINT_OBJECTS_TEST:

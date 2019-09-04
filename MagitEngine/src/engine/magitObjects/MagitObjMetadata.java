@@ -25,6 +25,33 @@ public class MagitObjMetadata implements Serializable {
         this.lastModifiedTime = lastModifiedTime;
     }
 
+    @Override
+    public String toString() {
+        return name + ", " +
+                sha1 + ", " +
+                objectType + ", " +
+                lastModifier + ", " +
+                lastModifiedTime;
+    }
+
+    public String getName() {
+        return name;
+    }
+    public String getSha1() {
+        return sha1;
+    }
+
+    public MagitObjectType getObjectType() {
+        return objectType;
+    }
+    public String getLastModifier() {
+        return lastModifier;
+    }
+    public String getLastModifiedTime() {
+        return lastModifiedTime;
+    }
+
+    @Deprecated
     public MagitObjMetadata(File file, MagitObject object) {
         this.name = file.getName();
         this.sha1 = object.calcSha1();
@@ -38,20 +65,4 @@ public class MagitObjMetadata implements Serializable {
         this.lastModifiedTime = object.getLastModifiedTime();
     }
 
-    @Override
-    public String toString() {
-        return name + ", " +
-                sha1 + ", " +
-                objectType + ", " +
-                lastModifier + ", " +
-                lastModifiedTime;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getSha1() {
-        return sha1;
-    }
 }

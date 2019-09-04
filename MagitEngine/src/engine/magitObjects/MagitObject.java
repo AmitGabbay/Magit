@@ -10,6 +10,16 @@ public abstract class MagitObject implements Sha1Able, Serializable {
     private transient String lastModifier;
     private transient String lastModifiedTime;
 
+    private transient MagitFolder parentFolder; //Used only on currentCommit and WC objects Map. Generate updated value before any use!!!
+
+    public MagitFolder getParentFolder() {
+        return parentFolder;
+    }
+
+    public void setParentFolder(MagitFolder parentFolder) {
+        this.parentFolder = parentFolder;
+    }
+
     public String getPath() {
         return path;
     }
@@ -40,5 +50,7 @@ public abstract class MagitObject implements Sha1Able, Serializable {
         this.setLastModifier(lastModifier);
         this.setLastModifiedTime(lastModifiedTime);
     }
+
+
 
 }

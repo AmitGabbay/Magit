@@ -1,12 +1,10 @@
 package consoleUI;
 
-import engine.magitObjects.Blob;
 import engine.repo.Repository;
 import engine.magitObjects.Commit;
 import engine.magitObjects.MagitObject;
 import engine.fileMangers.MagitFileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
@@ -129,8 +127,9 @@ public class Magit {
     }
 
     public void testNewCommitAndWCcalc() {
-        repo.updateCurrentCommitDatabases();
-        repo.TEST_updateWcDatabase();
+      //  repo.updateCurrentCommitDatabases();
+       // repo.TEST_updateWcDatabases();
+        System.out.println("not operative for now!");
     }
 
     /**
@@ -152,14 +151,23 @@ public class Magit {
     /**
      * testing only!!!
      */
-    public void myAmazingTesting() {
+    public void my666() {
 //        File toCheck = new File("C:\\Magit\\word.docx");
 //        Blob blobi = new Blob(toCheck);
 //        toCheck = new File("C:\\Magit\\aa.txt");
 //        Blob blobi2 = new Blob(toCheck);
-        repo.test123();
+        //repo.test123();
+        repo.createCurrentCommitDatabases();
     }
 
+    public void my667() {
+//        File toCheck = new File("C:\\Magit\\word.docx");
+//        Blob blobi = new Blob(toCheck);
+//        toCheck = new File("C:\\Magit\\aa.txt");
+//        Blob blobi2 = new Blob(toCheck);
+        //repo.test123();
+        repo.TEST_updateWcDatabases();
+    }
 
 
 

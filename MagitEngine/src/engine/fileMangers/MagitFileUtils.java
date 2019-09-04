@@ -139,7 +139,7 @@ public class MagitFileUtils {
                 if (file.isDirectory()) {
                     //ignore empty folders (doesn't work on folder contains an empty folder...)
                     if (!(file.list().length > 0))
-                        return;
+                        continue;
 
                     System.out.println("directory:" + file.getCanonicalPath());
                     MagitFolder currentFolder = new MagitFolder();
