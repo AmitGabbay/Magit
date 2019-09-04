@@ -10,7 +10,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLOutput;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -343,14 +342,15 @@ public class Repository {
             wcPendingChanges = new WC_PendingChangesData(); //TEST
         }
 
-        private void createWcDatabases_REC(File folderFile, MagitFolder parentFolder) {
+        private void createWcDatabases_REC(File parentFolderFile, MagitFolder parentFolder) {
 
-            //todo organize and get rid of duplicate code
-            File[] filesList = folderFile.listFiles();
+            File[] filesList = parentFolderFile.listFiles();
             if (filesList == null) //a fallback
                 return;
 
             for (File objectFile : filesList) {
+
+                MagitObject object;
 
                 if (objectFile.isDirectory()) {
                     //todo replace !(objectFile.list().length > 0) with !(filesList.length>0)
@@ -360,20 +360,19 @@ public class Repository {
                     if (objectFile.list().length == 0 || objectFile.getName().equals(".magit"))
                         continue;
 
-                    //System.out.println("directory:" + file.getCanonicalPath());
                     MagitFolder currentFolder = new MagitFolder();
-                    currentFolder.setParentFolder(parentFolder);
                     createWcDatabases_REC(objectFile, currentFolder); // Fill the new folder contents (recursively)
-                    createWcObjMetadataAndPutInParent(currentFolder, objectFile);
-                    wcObjects.put(currentFolder.calcSha1(), currentFolder);
-                } else {   //is file
-                    //System.out.println("file:" + file.getCanonicalPath());
+                    object = currentFolder;
+
+                } else {   //object is file
                     Blob currentBlob = new Blob(objectFile);
-                    currentBlob.setParentFolder(parentFolder);
-                    createWcObjMetadataAndPutInParent(currentBlob, objectFile);
-                    wcObjects.put(currentBlob.calcSha1(), currentBlob);
-                    wcFilesPaths.put(Paths.get(objectFile.getPath()), currentBlob.calcSha1());
+                    wcFilesPaths.put(Paths.get(objectFile.getPath()), currentBlob.calcSha1()); //Add file to WC path-sha1 map
+                    object = currentBlob;
                 }
+
+                object.setParentFolder(parentFolder);
+                createWcObjMetadataAndPutInParent(object, objectFile);
+                wcObjects.put(object.calcSha1(), object);
             }
         }
 
