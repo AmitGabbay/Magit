@@ -5,6 +5,7 @@ import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
+import java.lang.Cloneable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -236,6 +237,18 @@ public class Repository {
         //Update Current commit databases to the new one and disable the "Pending changes switch"
         createCurrentCommitDatabases();
         this.pendingChangesWaiting=false;
+    }
+
+    private void addNewObjectsToRepo(){
+
+        //Get a map contains only the new objects that
+        Map<String,MagitObject> newObjects = wcObjects.entrySet().stream()
+                .filter(e-> !(repoObjects.containsKey(e.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        repoObjects.putAll(newObjects);
+        //todo write newObjects to disk (write a method that get a collection to write not a single object)
+
     }
 
     public void createCurrentCommitDatabases() {
