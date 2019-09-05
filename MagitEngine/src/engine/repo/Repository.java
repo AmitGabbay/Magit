@@ -3,6 +3,7 @@ package engine.repo;
 import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class Repository {
 
     private final RepoSettings basicSettings;
     private final Map<String, Branch> branches; //index is name
-    private final Map<String, MagitObject> objects; //index is sha1
+    private final Map<String, MagitObject> repoObjects; //index is sha1
     private final Map<String, Commit> commits; //index is sha1
 
     private String activeUser = "Administrator";
@@ -44,7 +45,7 @@ public class Repository {
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashMap<>();
-        this.objects = new HashMap<>();
+        this.repoObjects = new HashMap<>();
         this.commits = new LinkedHashMap<>();
         this.fileUtils = new RepoFileUtils(path);
         this.pendingChangesWaiting = false;
@@ -94,10 +95,10 @@ public class Repository {
     }
 
     public void addObject(MagitObject object) {
-        this.objects.put(object.calcSha1(), object);
+        this.repoObjects.put(object.calcSha1(), object);
     }
 
-    //todo use inside larger method
+    @Deprecated
     public void addCommit(Commit commit) {
         this.commits.put(commit.calcSha1(), commit);
     }
@@ -119,19 +120,19 @@ public class Repository {
     }
 
     public Map<String, MagitObject> getObjectsAsMap() {
-        return objects;
+        return repoObjects;
     }
 
     public Collection<MagitObject> getObjectsTxtAsCollection() {
-        return objects.values();
+        return repoObjects.values();
     }
 
     public Set<Map.Entry<String, MagitObject>> getObjectsAsEntrySet() {
-        return objects.entrySet();
+        return repoObjects.entrySet();
     }
 
-    public MagitObject getObject(String sha1) {
-        return objects.get(sha1);
+    public MagitObject getRepoObject(String sha1) {
+        return repoObjects.get(sha1);
     }
 
     public Path getMagitPath() {
@@ -175,8 +176,7 @@ public class Repository {
             return null;
 
         Branch activeBranch = getActiveBranch();
-        Commit currentCommit = commits.get(activeBranch.getPointedCommit());
-        return currentCommit;
+        return commits.get(activeBranch.getPointedCommit());
     }
 
     public void TEST_updateWcDatabases() {
@@ -215,30 +215,25 @@ public class Repository {
     public void newCommit(String commitDescription) throws Exception {
         if (!this.pendingChangesWaiting)
             throw new Exception("Cannot commit! Please check for pending changes again!");
-
-        String parentCommitSha1;
-        if (isNoCommits()) {
-            parentCommitSha1 = null;
-            System.out.println("Imagine I commited - First commit");
-        }
-        else{
-            parentCommitSha1 = getCurrentCommit().calcSha1();
-            System.out.println("Imagine I commited");
-        }
-
+        //Gather the new commit metadata
         String rootFolderSha1 = fileUtils.getNewCommitRootFolderSha1();
         String creationTime = fileUtils.getNewCommitTime();
         String author = getActiveUser();
+        String parentCommitSha1; //Depends whether it is the first commit on the repo
+        if (isNoCommits())
+            parentCommitSha1 = null;
+        else
+            parentCommitSha1 = getCurrentCommit().calcSha1();
 
-//        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription,
-//                repo.getActiveUser(), currentTime);
-//
-//        repo.addCommit(firstCommit);
-//
-//        repo.getActiveBranch().setPointedCommit(firstCommit.calcSha1());
-//        System.out.println(firstCommit);
-// todo write do disk
+        //Create the new commit and set it as the active one
+        Commit newCommit = new Commit(rootFolderSha1, parentCommitSha1, commitDescription,
+               creationTime, author);
+        commits.put(newCommit.calcSha1(), newCommit); //add to the repo commit's map //todo write commit to disk
+        getActiveBranch().setPointedCommit(newCommit.calcSha1()); //set as the current commit //todo write branch to disk
+        // todo write new WCobjects to repo objects and than to disk (write method for filtering those values)
+        System.out.println(newCommit); //test
 
+        //Update Current commit databases to the new one and disable the "Pending changes switch"
         createCurrentCommitDatabases();
         this.pendingChangesWaiting=false;
     }
@@ -249,7 +244,7 @@ public class Repository {
         currentCommitFilesPaths = new HashMap<>();
 
         String repoRootSha1 = getCurrentCommit().getRootFolderSha1();
-        MagitFolder repoRoot = (MagitFolder) objects.get(repoRootSha1);
+        MagitFolder repoRoot = (MagitFolder) repoObjects.get(repoRootSha1);
 
         String repoRootPath = fileUtils.getRepoPath().toString();
         createCurrentCommitDatabases_Rec(repoRoot, repoRootPath);
@@ -264,7 +259,7 @@ public class Repository {
             Collection<MagitObjMetadata> magitFolderContents = ((MagitFolder) object).getObjectsValues();
             for (MagitObjMetadata currentObjectData : magitFolderContents) {
                 String currentObjectPath = objectPath.concat("\\" + currentObjectData.getName());
-                MagitObject currentObject = this.getObject(currentObjectData.getSha1()); //get object from the repo objects map
+                MagitObject currentObject = repoObjects.get(currentObjectData.getSha1()); //get object from the repo objects map
                 currentObject.setParentFolder((MagitFolder) object); //object is the parent MagitFolder
                 createCurrentCommitDatabases_Rec(currentObject, currentObjectPath);
             }
@@ -277,7 +272,7 @@ public class Repository {
 
 
     public void test123() {
-        System.out.println(objects);
+        System.out.println(repoObjects);
         System.out.println(currentCommitObjects);
         System.out.println(currentCommitFilesPaths);
         System.out.println(wcObjects);

@@ -160,7 +160,7 @@ public class MagitFileUtils {
             throw new FileNotFoundException(".magit folder doesn't exist!");
 
         //create "commit tree"
-        MagitFolder repoRoot = (MagitFolder) repo.getObject(commit.getRootFolderSha1());
+        MagitFolder repoRoot = (MagitFolder) repo.getRepoObject(commit.getRootFolderSha1());
         traverseCommit_Rec(repo, repoRoot);
 
         Path newCommitPath = repo.getObjectsPath().resolve(commit.calcSha1());
@@ -176,7 +176,7 @@ public class MagitFileUtils {
 
         if (object instanceof MagitFolder) {
             for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
-                MagitObject currentObject = repo.getObject(objectData.getSha1());
+                MagitObject currentObject = repo.getRepoObject(objectData.getSha1());
                 traverseCommit_Rec(repo, currentObject);
             }
         }

@@ -13,10 +13,11 @@ public class Commit implements Sha1Able {
 
     private transient String content;
 
-    public Commit(String rootFolderSha1, String parentCommitSha1, String description, String author, String creationTime) {
+    public Commit(String rootFolderSha1, String parentCommitSha1, String description, String creationTime, String author) {
 
         this.rootFolderSha1 = rootFolderSha1;
         this.parentCommitSha1 = parentCommitSha1;
+        // this.anotherParentCommitSha1 =
         this.description = description;
         this.creationTime = creationTime;
         this.author = author;
