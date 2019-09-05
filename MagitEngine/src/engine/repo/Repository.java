@@ -1,6 +1,5 @@
 package engine.repo;
 
-import com.sun.deploy.security.SelectableSecurityManager;
 import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -172,6 +171,9 @@ public class Repository {
     }
 
     public Commit getCurrentCommit() {
+        if (isNoCommits())
+            return null;
+
         Branch activeBranch = getActiveBranch();
         Commit currentCommit = commits.get(activeBranch.getPointedCommit());
         return currentCommit;
@@ -184,10 +186,14 @@ public class Repository {
     public boolean checkForWcPendingChanges() {
 
         boolean anyChanges=false;
+
         if (isNoCommits()) {
-            if (!fileUtils.isWcEmpty())
+            if (!fileUtils.isWcEmpty()) {
+                fileUtils.createWcDatabases_FirstCommit();
                 anyChanges = true;
+            }
         }
+
         //for Repo with existing commits
         else // todo verify to build currentCommitDatabases on repo loading from file/xml
             anyChanges = fileUtils.createWcDatabases();
@@ -210,16 +216,31 @@ public class Repository {
         if (!this.pendingChangesWaiting)
             throw new Exception("Cannot commit! Please check for pending changes again!");
 
-        if (commits.isEmpty())
-            MagitFileUtils.getFirstCommitFromWC(this, commitDescription);
-
+        String parentCommitSha1;
+        if (isNoCommits()) {
+            parentCommitSha1 = null;
+            System.out.println("Imagine I commited - First commit");
+        }
         else{
+            parentCommitSha1 = getCurrentCommit().calcSha1();
             System.out.println("Imagine I commited");
         }
 
+        String rootFolderSha1 = fileUtils.getNewCommitRootFolderSha1();
+        String creationTime = fileUtils.getNewCommitTime();
+        String author = getActiveUser();
+
+//        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription,
+//                repo.getActiveUser(), currentTime);
+//
+//        repo.addCommit(firstCommit);
+//
+//        repo.getActiveBranch().setPointedCommit(firstCommit.calcSha1());
+//        System.out.println(firstCommit);
+// todo write do disk
+
         createCurrentCommitDatabases();
         this.pendingChangesWaiting=false;
-
     }
 
     public void createCurrentCommitDatabases() {
@@ -351,6 +372,8 @@ public class Repository {
         private final Path branchesPath;
         private String newCommitTime;
 
+        private String newCommitRootFolderSha1;
+
         public RepoFileUtils(String repoStringPath) {
             this.repoPath = Paths.get(repoStringPath);
             this.magitPath = repoPath.resolve(".magit");
@@ -383,6 +406,69 @@ public class Repository {
             return newCommitTime;
         }
 
+        public String getNewCommitRootFolderSha1() {
+            return newCommitRootFolderSha1;
+        }
+//--------------------------------------------------------------------------------------------------------------
+
+        public void createWcDatabases_FirstCommit() {
+
+            updateNewCommitTime();
+            wcObjects = new HashMap<>();
+            wcFilesPaths = new HashMap<>();
+
+            File repoDir = new File(repoPath.toString());
+            MagitFolder wcRootFolder = new MagitFolder();
+            createWcDatabases_FirstCommit_REC(repoDir, wcRootFolder); //traverse WC and get Objects map and files paths
+
+            wcObjects.put(wcRootFolder.calcSha1(), wcRootFolder); //put the wcRootFolder to WC objects
+            newCommitRootFolderSha1 = wcRootFolder.calcSha1();
+
+            System.out.println(wcFilesPaths); //test
+            currentCommitFilesPaths = new HashMap<>(); //use an empty list for finding changes (There is no commit to compare to)
+            wcPendingChanges = new WC_PendingChangesData(); //Create WC files change lists
+        }
+
+        //Note: This method DOESN'T use/set the parentFolder field in MagitObject
+        private void createWcDatabases_FirstCommit_REC(File parentFolderFile, MagitFolder parentFolder) {
+            File[] filesList = parentFolderFile.listFiles();
+            if (filesList == null) //a fallback
+                return;
+
+            for (File objectFile : filesList) {
+
+                MagitObject object;
+
+                if (objectFile.isDirectory()) {
+                    //todo replace !(objectFile.list().length > 0) with !(filesList.length>0)
+
+                    /*  - Ignore Magit system folder
+                        - Ignore empty folders (Doesn't work on folder contains just an empty folder...) */
+                    if (objectFile.list().length == 0 || objectFile.getName().equals(".magit"))
+                        continue;
+
+                    MagitFolder currentFolder = new MagitFolder();
+                    createWcDatabases_FirstCommit_REC(objectFile, currentFolder); // Fill the new folder contents (recursively)
+                    object = currentFolder;
+
+                } else {   //object is file
+                    Blob currentBlob = new Blob(objectFile);
+                    wcFilesPaths.put(Paths.get(objectFile.getPath()), currentBlob.calcSha1()); //Add file to WC path-sha1 map
+                    object = currentBlob;
+                }
+
+                //Create the object's metadata and add it to the parent folder
+                String objectSha1 = object.calcSha1();
+                String lastModifier = Repository.this.getActiveUser();
+                String lastModifiedTime = getNewCommitTime();
+                MagitObjMetadata objMetadata = new MagitObjMetadata(objectFile, objectSha1, lastModifier, lastModifiedTime);
+                parentFolder.addObjectData(objMetadata);
+
+                wcObjects.put(objectSha1, object);
+            }
+        }
+
+        //------------------------------------------------------------------------------------
 
         /**
          * This method assumes the integrity of the repo path!
@@ -406,10 +492,11 @@ public class Repository {
 
             File repoDir = new File(repoPath.toString());
             MagitFolder wcRootFolder = new MagitFolder();
-            createWcDatabases_REC(repoDir, wcRootFolder); //traverse WC and get Objects map and pending changes
+            createWcDatabases_REC(repoDir, wcRootFolder); //traverse WC and get Objects map and files paths
 
             String wcRootFolderSha1 = wcRootFolder.calcSha1();
             wcObjects.put(wcRootFolderSha1, wcRootFolder); //put the wcRootFolder to WC objects
+            newCommitRootFolderSha1 = wcRootFolderSha1;
 
             //Check if there are any changes between current commit and the Wc
             String currentCommitRootFolderSha1  = getCurrentCommit().getRootFolderSha1();

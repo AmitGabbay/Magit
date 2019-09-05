@@ -25,7 +25,7 @@ public class Commit implements Sha1Able {
     }
 
     private String calcContent(){
-        return this.rootFolderSha1 + this.parentCommitSha1 + this.anotherParentCommitSha1 + this.description + this.creationTime + this.author;
+        return (this.rootFolderSha1 + this.parentCommitSha1 + this.anotherParentCommitSha1 + this.description + this.creationTime + this.author);
     }
 
     public String getRootFolderSha1() {
@@ -35,7 +35,7 @@ public class Commit implements Sha1Able {
     @Override
     public String calcSha1() {
 
-        //calcContent();
+        this.content = calcContent();
         return DigestUtils.sha1Hex(this.content);
     }
 
