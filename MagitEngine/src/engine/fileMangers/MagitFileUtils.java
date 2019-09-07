@@ -68,145 +68,32 @@ public class MagitFileUtils {
         }
     }
 
-    public static void writeBranchToDisk(Branch branchToWrite, Path BranchesFolder) throws IOException {
-
-        final String BranchToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
-        try (Writer out = new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(BranchToWritePath), StandardCharsets.UTF_8))) {
-
-            out.write(branchToWrite.getPointedCommit());
-        }
-    }
-
-    public static void updateHeadFileOnDisk (Path BranchesFolder, String activeBranchName) throws IOException {
-
-        final String HeadFilePath = BranchesFolder.toString() + "/HEAD"; //todo verify that cannot be overwritten by a new branch
-        try (Writer out = new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(HeadFilePath), StandardCharsets.UTF_8))) {
-
-            out.write(activeBranchName);
-        }
-    }
-
+//    public static void traverseCommit(Repository repo, Commit commit) throws IOException {
+//
+//        //create "commit tree"
+//        MagitFolder repoRoot = (MagitFolder) repo.getRepoObject(commit.getRootFolderSha1());
+//        traverseCommit_Rec(repo, repoRoot);
+//
+//    }
+//
+//    private static void traverseCommit_Rec(Repository repo, MagitObject object) throws IOException {
+//        Path magitObjectsPath = repo.getObjectsPath();
+//        Path objectPath = magitObjectsPath.resolve(object.calcSha1());
+//        writeObjectToMagit(objectPath, object);
+//
+//        if (object instanceof MagitFolder) {
+//            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
+//                MagitObject currentObject = repo.getRepoObject(objectData.getSha1());
+//                traverseCommit_Rec(repo, currentObject);
+//            }
+//        }
+//    }
 
 
-    public static Commit getFirstCommitFromWC(Repository repo, String newCommitDescription) {
 
-        SimpleDateFormat sdf = new SimpleDateFormat(Repository.DATE_FORMAT);
-        String currentTime = sdf.format(System.currentTimeMillis());
-
-        File repoDir = new File(repo.getStringPath());
-        MagitFolder repoRoot = new MagitFolder();
-        repoRoot.setHelperFields("<RepoRoot>", repo.getActiveUser(), currentTime);
-
-        getFirstCommitFromWC_Rec(repoDir, repo, repoRoot, currentTime);
-        repo.addObject(repoRoot);
-        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription,
-                repo.getActiveUser(), currentTime);
-
-        repo.addCommit(firstCommit);
-
-        repo.getActiveBranch().setPointedCommit(firstCommit.calcSha1());
-        System.out.println(firstCommit);
-        return firstCommit;
-    }
-
-    //todo send instead only the objects map?
-    private static void getFirstCommitFromWC_Rec(File currentObject, Repository repo, MagitFolder parent, String newCommitTime) {
-        try {
-            File[] files = currentObject.listFiles();
-            if (files == null)
-                return;
-
-            for (File file : files) {
-
-                //todo catch I/O ERROR OUTSIDE THE METHOD
-
-                if (file.isDirectory() && file.getName().equals(".magit"))  // TODO CREATE ANOTHER METHOD WITHOUT THIS?
-                    continue;
-
-                if (file.isDirectory()) {
-                    //ignore empty folders (doesn't work on folder contains an empty folder...)
-                    if (!(file.list().length > 0))
-                        continue;
-
-                    System.out.println("directory:" + file.getCanonicalPath());
-                    MagitFolder currentFolder = new MagitFolder();
-                    currentFolder.setHelperFields(parent.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
-                    getFirstCommitFromWC_Rec(file, repo, currentFolder, newCommitTime);
-                    repo.addObject(currentFolder);
-                    MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), repo.getActiveUser(), newCommitTime);
-                    parent.addObjectData(folderData);
-                } else {   //is file
-                    System.out.println("file:" + file.getCanonicalPath());
-                    Blob fileContent = new Blob(file);
-                    fileContent.setHelperFields(parent.getPath()+"/"+file.getName(), repo.getActiveUser(), newCommitTime);
-                    repo.addObject(fileContent);
-                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), repo.getActiveUser(), newCommitTime);
-                    parent.addObjectData(fileData);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void writeFirstCommitToMagitFolder(Repository repo, Commit commit) throws IOException {
-        Path magitFolderPath = repo.getMagitPath();
-        //verify .magit folder exist
-        if (Files.notExists(magitFolderPath))
-            throw new FileNotFoundException(".magit folder doesn't exist!");
-
-        //create "commit tree"
-        MagitFolder repoRoot = (MagitFolder) repo.getRepoObject(commit.getRootFolderSha1());
-        traverseCommit_Rec(repo, repoRoot);
-
-        Path newCommitPath = repo.getObjectsPath().resolve(commit.calcSha1());
-        writeObjectToMagit(newCommitPath, commit);
-        Branch activeBranch = repo.getActiveBranch();
-        writeBranchToDisk(activeBranch, repo.getBranchesPath());
-    }
-
-    private static void traverseCommit_Rec(Repository repo, MagitObject object) throws IOException {
-        Path magitObjectsPath = repo.getObjectsPath();
-        Path objectPath = magitObjectsPath.resolve(object.calcSha1());
-        writeObjectToMagit(objectPath, object);
-
-        if (object instanceof MagitFolder) {
-            for (MagitObjMetadata objectData : ((MagitFolder) object).getObjectsValues()) {
-                MagitObject currentObject = repo.getRepoObject(objectData.getSha1());
-                traverseCommit_Rec(repo, currentObject);
-            }
-        }
-    }
-
-    private static void writeObjectToMagit(Path objectPath, Sha1Able object) throws IOException {
-        try (ObjectOutputStream out =
-                     new ObjectOutputStream(
-                             new FileOutputStream(objectPath.toString()))) {
-            out.writeObject(object);
-            out.flush();
-        }
-    }
-
-
-    /**
-     * test only!!!
-     *
-     * @param branchToWrite
-     * @param BranchesFolder
-     * @throws IOException
+    /*
+     ********************* test only section!!!*********************************
      */
-    public static void writeBranchToDisk2(Branch branchToWrite, Path BranchesFolder) throws IOException {
 
-        final String fileToWritePath = BranchesFolder.toString() + "/" + branchToWrite.getName();
-        try (Writer out = new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(fileToWritePath), StandardCharsets.UTF_8))) {
 
-            out.write("ama");
-        }
-    }
-}
+} //class end

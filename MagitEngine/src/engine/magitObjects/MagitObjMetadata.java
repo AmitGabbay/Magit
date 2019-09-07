@@ -34,9 +34,11 @@ public class MagitObjMetadata implements Serializable {
                 lastModifiedTime;
     }
 
+
     public String getName() {
         return name;
     }
+
     public String getSha1() {
         return sha1;
     }
@@ -44,25 +46,13 @@ public class MagitObjMetadata implements Serializable {
     public MagitObjectType getObjectType() {
         return objectType;
     }
+
     public String getLastModifier() {
         return lastModifier;
     }
+
     public String getLastModifiedTime() {
         return lastModifiedTime;
-    }
-
-    @Deprecated
-    public MagitObjMetadata(File file, MagitObject object) {
-        this.name = file.getName();
-        this.sha1 = object.calcSha1();
-
-        if (file.isDirectory())
-            this.objectType = MagitObjectType.FOLDER;
-        else // is File
-            this.objectType = MagitObjectType.FILE;
-
-        this.lastModifier = object.getLastModifier();
-        this.lastModifiedTime = object.getLastModifiedTime();
     }
 
 }

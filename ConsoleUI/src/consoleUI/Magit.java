@@ -204,7 +204,7 @@ public class Magit {
 //        toCheck = new File("C:\\Magit\\aa.txt");
 //        Blob blobi2 = new Blob(toCheck);
         //repo.test123();
-        repo.TEST_updateWcDatabases();
+        //repo.TEST_updateWcDatabases();
     }
 
 

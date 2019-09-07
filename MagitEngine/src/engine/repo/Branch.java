@@ -10,12 +10,12 @@ import java.util.Objects;
 public class Branch {
 
     @NotNull private final String name;
-
     @NotNull private String pointedCommit;
 
     private boolean isRemote;
     private boolean tracking;
     private String trackingAfter;
+
     /**
      private ct'or to create initial master branch
      */
@@ -23,7 +23,7 @@ public class Branch {
         this.name = "master";
         this.pointedCommit="";
         this.isRemote = false;
-        this.tracking=false;
+        this.tracking = false;
     }
 
     public static Branch createMasterBranch(){
@@ -33,6 +33,14 @@ public class Branch {
 
     public String getName() {
         return name;
+    }
+
+    public String getPointedCommit() {
+        return pointedCommit;
+    }
+
+    public void setPointedCommit(String pointedCommit) {
+        this.pointedCommit = pointedCommit;
     }
 
     @Override
@@ -51,14 +59,5 @@ public class Branch {
     public int hashCode() {
         return Objects.hash(name, pointedCommit, isRemote, tracking, trackingAfter);
     }
-
-    public String getPointedCommit() {
-        return pointedCommit;
-    }
-
-    public void setPointedCommit(String pointedCommit) {
-        this.pointedCommit = pointedCommit;
-    }
-
 }
 
