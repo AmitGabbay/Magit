@@ -12,7 +12,6 @@ public class MainMenu {
         boolean toEnd = false;
         do {
 
-            System.out.println();
             magit.printCurrentRepoDetails();
             printMenu();
             System.out.println();
@@ -29,10 +28,24 @@ public class MainMenu {
 
     private static void printMenu() {
         System.out.println("Please type the number of the operation you wish to do:");
-        for (MenuItem item : MenuItem.values())
-            System.out.println(item);
+
+        if (!magit.isRepoDefined())
+            printNoDefinedRepoMenu();
+        else {
+            for (MenuItem item : MenuItem.values())
+                System.out.println(item);
+        }
+
         System.out.println(MenuItem.EXIT_OPER_CODE + ". Quit program");
     }
+
+    private static void printNoDefinedRepoMenu()
+    {
+        System.out.println(MenuItem.NEW_REPO_SCRATCH);
+        System.out.println(MenuItem.OPEN_FROM_XML);
+        System.out.println(MenuItem.OPEN_FROM_DISK);
+    }
+
 
     private static int getValidUserOperSelection() {
         Scanner scanner = new Scanner(System.in);
@@ -60,23 +73,32 @@ public class MainMenu {
 
     private static void doRequestedOperation(MenuItem requestedOper) {
         switch (requestedOper) {
+
             case NEW_REPO_SCRATCH:
                 magit.createNewRepoFromScratch();
                 break;
+
+            case OPEN_FROM_DISK:
+                magit.openRepoFromDisk();
+                break;
+
             case SHOW_STATUS:
                 magit.checkWcStatus();
                 break;
 
-            case CHANGE_REPO:
-                magit.changeRepo();
-                break;
-
-            case TEST_FIRST_COMMIT:
-                magit.firstCommit();
-                break;
-
-            case Commit:
+            case COMMIT:
                 magit.commit();
+                break;
+
+            case OPEN_FROM_XML:
+            case CHANGE_USERNAME:
+            case SHOW_CURRENT_COMMIT:
+            case SHOW_BRANCHES:
+            case NEW_BRANCH:
+            case DELETE_BRANCH:
+            case CHECKOUT:
+            case SHOW_COMMIT_HISTORY:
+                magit.inDevProgress();
                 break;
 
             case TEST_GENERAL:
@@ -88,7 +110,7 @@ public class MainMenu {
                 break;
 
             case PRINT_OBJECTS_TEST:
-                magit.printObject();
+                magit.printObject_TEST();
                 break;
 
         }

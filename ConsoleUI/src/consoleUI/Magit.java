@@ -17,11 +17,6 @@ public class Magit {
 
     private Repository repo = null;
 
-//    public static void createNewRepoFromScratchWrapper() {
-//        repo = createNewRepoFromScratch();
-//    }
-
-
     public static void printNoDefinedRepoMsg() {
         System.out.println("Error! Magit cannot perform this operation without a defined " +
                 "repository. \nPlease open an existing one or create a new one and then try again.");
@@ -81,7 +76,7 @@ public class Magit {
 
     //todo verify error checking
 
-    public void changeRepo() {
+    public void openRepoFromDisk() {
 
         Scanner scanner = new Scanner(System.in);
         String repoName, repoPath;
@@ -105,56 +100,22 @@ public class Magit {
         ///////
     }
 
+
     public void checkWcStatus() {
+
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
             return;
         }
 
+        printCurrentRepoDetails();
         boolean anyChanges = repo.checkForWcPendingChanges();
 
-        if (anyChanges) {
-            if (repo.isNoCommits()) //todo support pending changes on first commit also
-                System.out.println("Support for first commit will be added soon");
-            else
-                System.out.println(repo.getWcPendingChanges());
-        }
-
+        if (anyChanges)
+            System.out.println(repo.getWcPendingChanges());
         else
             System.out.println("There are no pending changes for commit");
     }
-
-
-
-    @Deprecated
-    public void firstCommit() {
-
-        String commitDescription;
-        Scanner scanner = new Scanner(System.in);
-        boolean finishInputLoop = false;
-        do {
-            System.out.println("Please enter a description for the new commit");
-            commitDescription = scanner.nextLine();
-            if (commitDescription.isEmpty())
-                System.out.println("Please enter a non-empty description.");
-            else {
-                finishInputLoop = true;
-                Commit newCommit = MagitFileUtils.getFirstCommitFromWC(this.repo, commitDescription);
-                try {
-                    MagitFileUtils.writeFirstCommitToMagitFolder(this.repo, newCommit);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        } while (!finishInputLoop);
-    }
-
-
-
-
-
-
 
 
     public void commit() {
@@ -166,7 +127,7 @@ public class Magit {
 
         checkWcStatus();
         if (!repo.isPendingChangesWaiting()) {
-            System.out.println("Cannot commit if there isn't something new... Please try again later");
+            System.out.println("Cannot commit if there isn't something new... Please try again later\n");
             return;
         }
 
@@ -184,22 +145,38 @@ public class Magit {
                     repo.newCommit(commitDescription);
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
+                    e.printStackTrace();
                     System.out.println();
                 }
-//                try {
-//                    MagitFileUtils.writeFirstCommitToMagitFolder(this.repo, newCommit);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
             }
-
         } while (!finishInputLoop);
     }
 
+
+    public boolean isRepoDefined() {
+        return this.repo != null;
+    }
+
+    public void printCurrentRepoDetails() {
+        System.out.print("Working on the Repository: ");
+        if (isRepoDefined()) {
+            System.out.print(repo.getName() + "\t");
+            System.out.println("Located in: " + repo.getStringPath());
+            System.out.println("Current user: " + repo.getActiveUser());
+            System.out.println();
+        } else
+            System.out.println("N\\A");
+    }
+
+    public void inDevProgress() {
+        System.out.println("This operation will be added soon");
+    }
+
     /**
-     * testing only!!!
+     ********* Testing only section!!! ********************************************************************************
      */
-    public void printObject() {
+
+    public void printObject_TEST() {
         Set<Map.Entry<String, MagitObject>> objects = repo.getObjectsAsEntrySet();
         for (Map.Entry<String, MagitObject> object : objects) {
             System.out.println(object.getKey() + ": " + object.getValue());
@@ -212,9 +189,6 @@ public class Magit {
 //            System.out.println(object);
     }
 
-    /**
-     * testing only!!!
-     */
     public void my666() {
 //        File toCheck = new File("C:\\Magit\\word.docx");
 //        Blob blobi = new Blob(toCheck);
@@ -234,19 +208,6 @@ public class Magit {
     }
 
 
-
-    public boolean isRepoDefined() {
-        return this.repo != null;
-    }
-
-    public void printCurrentRepoDetails() {
-        System.out.print("Working on the Repository: ");
-        if (isRepoDefined()) {
-            System.out.print(repo.getName() + "\t");
-            System.out.println("Located in: " + repo.getStringPath());
-        } else
-            System.out.println("N\\A");
-    }
-}
+} //class end
 
 

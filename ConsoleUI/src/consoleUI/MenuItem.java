@@ -4,11 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum MenuItem {
-    NEW_REPO_SCRATCH(11,"Create new Magit repository"),
-    SHOW_STATUS(12,"Show Status (WC Pending changes)"),
-    CHANGE_REPO(13,"Change to existing Magit repository"),
-    Commit(14, "Commit"),
-    TEST_FIRST_COMMIT(99, "First commit test"),
+    NEW_REPO_SCRATCH(1,"Create a new Magit repository from scratch"),
+    OPEN_FROM_XML(2,"Open Magit repository from XML file"),
+    OPEN_FROM_DISK(3,"Open Magit repository from disk"),
+    CHANGE_USERNAME(4,"Change active username"),
+    SHOW_CURRENT_COMMIT(5,"Show current commit files and folders"),
+    SHOW_STATUS(6,"Show Status (working copy files pending changes)"),
+    COMMIT(7, "Commit"),
+    SHOW_BRANCHES(8, "Show all branches"),
+    NEW_BRANCH(9, "Create a new branch"),
+    DELETE_BRANCH(10, "Delete an existing branch"),
+    CHECKOUT(11, "Checkout (select branch)"),
+    SHOW_COMMIT_HISTORY(12, "Show active branch commits history"),
     TEST_GENERAL(666, "TEST - GENERAL"),
     TEST_GENERAL2(667, "TEST - GENERAL2"),
     PRINT_OBJECTS_TEST(777,"Test: print objects");
@@ -29,10 +36,6 @@ public enum MenuItem {
         this.UI_Text = UI_Text;
         this.UI_OpNumber = UI_OpNumber;
     }
-
-//    public static int getExitOperCode() {
-//        return EXIT_OPER_CODE;
-//    }
 
     public static MenuItem getItemByInt(int number) {
         return ITEM_BY_NUM.get(number);

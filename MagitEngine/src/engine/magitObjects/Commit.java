@@ -2,6 +2,8 @@ package engine.magitObjects;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.util.Objects;
+
 public class Commit implements Sha1Able {
 
     private final String rootFolderSha1;
@@ -53,6 +55,21 @@ public class Commit implements Sha1Able {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Commit commit = (Commit) o;
+        return rootFolderSha1.equals(commit.rootFolderSha1) &&
+                Objects.equals(parentCommitSha1, commit.parentCommitSha1) &&
+                Objects.equals(anotherParentCommitSha1, commit.anotherParentCommitSha1) &&
+                description.equals(commit.description) &&
+                creationTime.equals(commit.creationTime) &&
+                author.equals(commit.author);
+    }
 
-
+    @Override
+    public int hashCode() {
+        return Objects.hash(rootFolderSha1, parentCommitSha1, anotherParentCommitSha1, description, creationTime, author);
+    }
 }

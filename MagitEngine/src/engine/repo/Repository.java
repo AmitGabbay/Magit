@@ -5,9 +5,9 @@ import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
+import java.io.*;
 import java.lang.Cloneable;
-import java.io.File;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -15,6 +15,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 public class Repository {
 
@@ -86,7 +89,9 @@ public class Repository {
         return pendingChangesWaiting;
     }
 
-    public boolean isNoCommits() {return commits.isEmpty();}
+    public boolean isNoCommits() {
+        return commits.isEmpty();
+    }
 
     private void initializePaths() {
         this.repoPath = Paths.get(this.getStringPath());
@@ -95,6 +100,7 @@ public class Repository {
         this.branchesPath = magitPath.resolve("branches");
     }
 
+    @Deprecated
     public void addObject(MagitObject object) {
         this.repoObjects.put(object.calcSha1(), object);
     }
@@ -186,7 +192,7 @@ public class Repository {
 
     public boolean checkForWcPendingChanges() {
 
-        boolean anyChanges=false;
+        boolean anyChanges = false;
 
         if (isNoCommits()) {
             if (!fileUtils.isWcEmpty()) {
@@ -216,6 +222,23 @@ public class Repository {
     public void newCommit(String commitDescription) throws Exception {
         if (!this.pendingChangesWaiting)
             throw new Exception("Cannot commit! Please check for pending changes again!");
+
+        //Create the new commit and set it as the active one
+        Commit newCommit = createNewCommit(commitDescription);
+
+        addNewObjectsToRepo(); //add the new wcObjects to  the repo objects and than write them to disk
+        addNewCommit(newCommit); //add the new commit the repo's commits map and write it to the disk
+        updateActiveBranch(newCommit.calcSha1()); //set active branch to point the current commit and write the branch to disk
+        System.out.println(newCommit); //test
+
+        //Update Current commit databases to the new one and disable the "Pending changes switch"
+        createCurrentCommitDatabases();
+        this.pendingChangesWaiting = false;
+
+        System.out.println("New commit " + newCommit.calcSha1() + " has been created!\n");
+    }
+
+    private Commit createNewCommit(String commitDescription) {
         //Gather the new commit metadata
         String rootFolderSha1 = fileUtils.getNewCommitRootFolderSha1();
         String creationTime = fileUtils.getNewCommitTime();
@@ -226,30 +249,35 @@ public class Repository {
         else
             parentCommitSha1 = getCurrentCommit().calcSha1();
 
-        //Create the new commit and set it as the active one
-        Commit newCommit = new Commit(rootFolderSha1, parentCommitSha1, commitDescription,
-               creationTime, author);
-        commits.put(newCommit.calcSha1(), newCommit); //add to the repo commit's map //todo write commit to disk
-        getActiveBranch().setPointedCommit(newCommit.calcSha1()); //set as the current commit //todo write branch to disk
-        // todo write new WCobjects to repo objects and than to disk (write method for filtering those values)
-        System.out.println(newCommit); //test
-
-        //Update Current commit databases to the new one and disable the "Pending changes switch"
-        createCurrentCommitDatabases();
-        this.pendingChangesWaiting=false;
+        return new Commit(rootFolderSha1, parentCommitSha1, commitDescription,
+                creationTime, author);
     }
 
-    private void addNewObjectsToRepo(){
+    private void addNewObjectsToRepo() {
 
-        //Get a map contains only the new objects that
-        Map<String,MagitObject> newObjects = wcObjects.entrySet().stream()
-                .filter(e-> !(repoObjects.containsKey(e.getKey())))
+        //Get a map contains only the new objects that aren't already exist in the repo
+        Map<String, MagitObject> newObjects = wcObjects.entrySet().stream()
+                .filter(e -> !(repoObjects.containsKey(e.getKey())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+        //add newObjects to the repo main objects map
         repoObjects.putAll(newObjects);
-        //todo write newObjects to disk (write a method that get a collection to write not a single object)
 
+        //write newObjects to disk
+        for (MagitObject object : newObjects.values())
+            fileUtils.writeObjectToDisk(object);
     }
+
+    private void updateActiveBranch(String newPointedCommitSha1) {
+        getActiveBranch().setPointedCommit(newPointedCommitSha1);
+        fileUtils.writeActiveBranchToDisk();
+    }
+
+    private void addNewCommit(Commit newCommit) {
+        commits.put(newCommit.calcSha1(), newCommit); //add to the repo commit's map
+        fileUtils.writeObjectToDisk(newCommit); //write the commit on disk
+    }
+
 
     public void createCurrentCommitDatabases() {
 
@@ -312,63 +340,6 @@ public class Repository {
 ////                .map(object -> object.getPath())
 ////                .collect(Collectors.toList());
 //
-//    }
-
-    //
-//    public Commit getFirstCommitFromWC(String newCommitDescription) {
-//
-//        fileUtils.updateNewCommitTime();
-//        File repoRootDir = new File(this.getStringPath());
-//        MagitFolder repoRoot = new MagitFolder();
-//        getFirstCommitFromWC_Rec(repoRootDir, repoRoot);
-//        addObject(repoRoot);
-//        Commit firstCommit = new Commit(repoRoot.calcSha1(), null, newCommitDescription,
-//                activeUser, fileUtils.getNewCommitTime());
-//
-//        addCommit(firstCommit);
-//
-//        //TEMPORARY!!!!
-//        try {
-//            createMasterBranch_TESTINT_ONLY();
-//        } catch (IOException e) {
-//            System.out.println("fuck");
-//            e.printStackTrace();
-//        }
-//        ///////
-//
-//        getActiveBranch().setPointedCommit(firstCommit.calcSha1());
-//        System.out.println(firstCommit);
-//        return firstCommit;
-//    }
-//
-//    private void getFirstCommitFromWC_Rec(File currentObject, MagitFolder parent) {
-//        try {
-//            File[] files = currentObject.listFiles();
-//            for (File file : files) {
-//
-//                //todo catch I/O ERROR OUTSIDE THE METHOD
-//
-//                if (file.isDirectory() && file.getName().equals(".magit"))  // TODO CREATE ANOTHER METHOD WITHOUT THIS?
-//                    continue;
-//
-//                if (file.isDirectory()) {
-//                    System.out.println("directory:" + file.getCanonicalPath());
-//                    MagitFolder currentFolder = new MagitFolder();
-//                    getFirstCommitFromWC_Rec(file, currentFolder);
-//                    this.addObject(currentFolder);
-//                    MagitObjMetadata folderData = new MagitObjMetadata(file, currentFolder.calcSha1(), activeUser, fileUtils.getNewCommitTime());
-//                    parent.addObjectData(folderData);
-//                } else {   //is file
-//                    System.out.println("file:" + file.getCanonicalPath());
-//                    Blob fileContent = new Blob(file);
-//                    this.addObject(fileContent);
-//                    MagitObjMetadata fileData = new MagitObjMetadata(file, fileContent.calcSha1(), activeUser, fileUtils.getNewCommitTime());
-//                    parent.addObjectData(fileData);
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 //    }
 
 
@@ -480,11 +451,12 @@ public class Repository {
 
         /**
          * This method assumes the integrity of the repo path!
+         *
          * @return True if WC is empty (only .magit folder exists), False otherwise.
          */
-        public boolean isWcEmpty(){
+        public boolean isWcEmpty() {
             File repoDir = new File(repoPath.toString());
-            if(repoDir.list().length==1)
+            if (repoDir.list().length == 1)
                 return true;
 
             else
@@ -507,7 +479,7 @@ public class Repository {
             newCommitRootFolderSha1 = wcRootFolderSha1;
 
             //Check if there are any changes between current commit and the Wc
-            String currentCommitRootFolderSha1  = getCurrentCommit().getRootFolderSha1();
+            String currentCommitRootFolderSha1 = getCurrentCommit().getRootFolderSha1();
             if (wcRootFolderSha1.equals(currentCommitRootFolderSha1))
                 return false;
 
@@ -573,7 +545,43 @@ public class Repository {
             objParentFolder.addObjectData(objMetadata);
         }
 
-    }
+        private void writeObjectToDisk(Sha1Able object) {
+
+            Path pathToWrite = objectsPath.resolve(object.calcSha1());
+
+            try (FileOutputStream fos = new FileOutputStream(pathToWrite.toString());
+                 GZIPOutputStream zos = new GZIPOutputStream(fos);
+                 ObjectOutputStream out = new ObjectOutputStream(zos)) {
+
+                out.writeObject(object);
+                out.flush();
+
+            } catch (IOException e) {
+                //todo Notify in another way if not working in consoleUI
+                System.out.println("There was a problem with writing file " + pathToWrite + " to disk.");
+                e.printStackTrace();
+            }
+        }
+
+        //Writes a new branch, or overrides the existing on on disk
+        public void writeActiveBranchToDisk() {
+
+            final Path pathToWrite = branchesPath.resolve(getActiveBranch().toString());
+            try (Writer out = new BufferedWriter(
+                    new OutputStreamWriter(
+                            new FileOutputStream(pathToWrite.toString()), StandardCharsets.UTF_8))) {
+
+                out.write(getActiveBranch().getPointedCommit());
+
+            } catch (IOException e) {
+                //todo Notify in another way if not working in consoleUI
+                System.out.println("There was a problem with writing file " + pathToWrite + " to disk.");
+                e.printStackTrace();
+            }
+        }
+
+
+    } //RepoFileUtils Class end
 
     private class WC_PendingChangesData {
 
@@ -614,19 +622,6 @@ public class Repository {
         //        deletedFiles.clear();
         //    }
 
-//        public void addNewFile(Path newFilePath) {
-//            newFiles.add(newFilePath);
-//        }
-//
-//        public void addChangedFile(Path changedFilePath) {
-//            changedFiles.add(changedFilePath);
-//        }
-//
-//        public void addDeletedFile(Path deletedFilePath) {
-//            deletedFiles.add(deletedFilePath);
-//        }
+    } //WC_PendingChangesData class end
 
-
-
-    }
-}
+} //Repository class end
