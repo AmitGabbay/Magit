@@ -1,14 +1,9 @@
 package engine.fileMangers;
 
-import engine.magitObjects.*;
-import engine.repo.Branch;
 import engine.repo.RepoSettings;
-import engine.repo.Repository;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.text.SimpleDateFormat;
 
 public class MagitFileUtils {
 
@@ -17,44 +12,42 @@ public class MagitFileUtils {
      * Checks path validity (parent path exist and there is no folder with new repo name in it).
      * Exceptions will be thrown and propagated to the calling method if any problems found
      *
-     * @param requestedParentPath
-     * @param newRepoName
+     * @param requestedPath
      * @throws InvalidPathException
      * @throws FileAlreadyExistsException
      */
-    public static void CreateNewRepoOnDisk_PathValidation(String requestedParentPath, String newRepoName) throws InvalidPathException, FileAlreadyExistsException {
+    public static void newRepoOnDisk_PathValidation(String requestedPath) throws InvalidPathException, FileAlreadyExistsException {
 
-        Path parentPath = Paths.get(requestedParentPath);
-        Path newRepoPath = parentPath.resolve(newRepoName);
+        Path fullPath = Paths.get(requestedPath);
+        Path parentPath = fullPath.getParent();
 
         //check parent path validity (must exist in the file system!)
         if (Files.notExists(parentPath))
             throw new InvalidPathException(parentPath.toString(), "Path doesn't exist");
 
-            //verifies there is no folder with the new repo name
-        else if (Files.exists(newRepoPath)) {
-            throw new FileAlreadyExistsException(newRepoPath.getFileName().toString(), null,
-                    "Folder with this name already exist in the path " + parentPath.toString());
+            //verifies there is no folder with the new repo folder name
+        else if (Files.exists(fullPath)) {
+            throw new FileAlreadyExistsException(fullPath.getFileName().toString(), null,
+                    "Folder with this name already exist in the path " + parentPath);
         } else
-            System.out.println("good"); //test
+            System.out.println("Path validated."); //test
     }
 
     /**
      * Should Be used only after path validation using the CreateNewRepoOnDisk_PathValidation() method!
      *
-     * @param newRepo
+     * @param newRepoSettings
      * @throws IOException
      */
-    public static void createNewRepoOnDisk(RepoSettings newRepo) throws IOException {
+    public static void createNewRepoOnDisk(RepoSettings newRepoSettings) throws IOException {
 
-        Path newRepoPath = Paths.get(newRepo.getPath());
-        //Path parentPath = newRepoPath.getParent();
+        Path newRepoPath = Paths.get(newRepoSettings.getPath());
         Path magitPath = newRepoPath.resolve(".magit");
 
         //create the new repository directory and the internal magit folders structure
         Files.createDirectory(newRepoPath);
         Files.createDirectory(magitPath);
-        System.out.println(magitPath.toString()); //test
+        //System.out.println(magitPath.toString()); //test
         Files.createDirectory(magitPath.resolve("objects"));
         Files.createDirectory(magitPath.resolve("branches"));
 
@@ -63,11 +56,17 @@ public class MagitFileUtils {
         try (ObjectOutputStream out =
                      new ObjectOutputStream(
                              new FileOutputStream(repoSettingsFile.toString()))) {
-            out.writeObject(newRepo);
+            out.writeObject(newRepoSettings);
             out.flush();
         }
     }
 
+    public static boolean isExistingRepoPath(String path) {
+        Path repoPath = Paths.get(path);
+        Path magitPath = repoPath.resolve(".magit");
+
+        return Files.exists(magitPath);
+    }
 //    public static void traverseCommit(Repository repo, Commit commit) throws IOException {
 //
 //        //create "commit tree"

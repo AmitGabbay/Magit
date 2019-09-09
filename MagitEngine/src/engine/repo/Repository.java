@@ -36,7 +36,6 @@ public class Repository {
     private RepoFileUtils fileUtils;
 
 
-
     public Repository(String name, String path) {
         this.basicSettings = new RepoSettings(name, path);
         this.branches = new HashMap<>();
@@ -44,10 +43,6 @@ public class Repository {
         this.commits = new LinkedHashMap<>();
         this.fileUtils = new RepoFileUtils(path);
         this.pendingChangesWaiting = false;
-    }
-
-    public static void checkNewRepoPath(String requestedParentPath, String newRepoName) throws InvalidPathException, FileAlreadyExistsException {
-        MagitFileUtils.CreateNewRepoOnDisk_PathValidation(requestedParentPath, newRepoName);
     }
 
     /**
@@ -64,7 +59,7 @@ public class Repository {
         Repository newRepo = new Repository(newRepoName, requestedPath);
         MagitFileUtils.createNewRepoOnDisk(newRepo.getBasicSettings());
 
-        Branch master = Branch.createMasterBranch();
+        Branch master = Branch.createBlankMasterBranch();
         newRepo.addNewBranchToRepo(master);
         newRepo.setActiveBranch(master);
         return newRepo;
@@ -93,7 +88,6 @@ public class Repository {
     public RepoSettings getBasicSettings() {
         return basicSettings;
     }
-
 
     public Map<String, MagitObject> getObjectsAsMap() {
         return repoObjects;
@@ -132,7 +126,7 @@ public class Repository {
     }
 
     public void createMasterBranch_TESTINT_ONLY() throws IOException {
-        Branch master = Branch.createMasterBranch();
+        Branch master = Branch.createBlankMasterBranch();
         addNewBranchToRepo(master);
         setActiveBranch(master);
     }

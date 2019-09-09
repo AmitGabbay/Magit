@@ -22,6 +22,7 @@ public class MainMenu {
             } else {
                 MenuItem userSelection = MenuItem.getItemByInt(userSelectionNum);
                 doRequestedOperation(userSelection);
+                continueOnNextKeyPress();
             }
         } while (!toEnd);
     }
@@ -39,13 +40,11 @@ public class MainMenu {
         System.out.println(MenuItem.EXIT_OPER_CODE + ". Quit program");
     }
 
-    private static void printNoDefinedRepoMenu()
-    {
+    private static void printNoDefinedRepoMenu() {
         System.out.println(MenuItem.NEW_REPO_SCRATCH);
         System.out.println(MenuItem.OPEN_FROM_XML);
         System.out.println(MenuItem.OPEN_FROM_DISK);
     }
-
 
     private static int getValidUserOperSelection() {
         Scanner scanner = new Scanner(System.in);
@@ -112,8 +111,13 @@ public class MainMenu {
             case PRINT_OBJECTS_TEST:
                 magit.printObject_TEST();
                 break;
-
         }
+    }
+
+    private static void continueOnNextKeyPress() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Press Enter to continue...\n");
+        scanner.nextLine();
     }
 
 

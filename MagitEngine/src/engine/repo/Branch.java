@@ -16,6 +16,15 @@ public class Branch {
     private boolean tracking;
     private String trackingAfter;
 
+    
+    public Branch(String name, String pointedCommit)
+    {
+        this.name = name;
+        this.pointedCommit = pointedCommit;
+        this.isRemote = false;
+        this.tracking = false;
+    }
+    
     /**
      private ct'or to create initial master branch
      */
@@ -26,7 +35,7 @@ public class Branch {
         this.tracking = false;
     }
 
-    public static Branch createMasterBranch(){
+    public static Branch createBlankMasterBranch(){
         return new Branch();
     }
 

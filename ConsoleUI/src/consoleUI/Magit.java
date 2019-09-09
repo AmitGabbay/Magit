@@ -9,95 +9,109 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class Magit {
 
+    private final String tryAgainNonEmptyOrSpacesInEdges = "Please enter a non-empty input which doesn't starts or " +
+            "ends with a space.";
     private Repository repo = null;
+    private Predicate<String> nonEmptyAndNoSpacesInEdgesString = v -> !(v.isEmpty() || v.startsWith(" ") || v.endsWith(" "));
 
-    public static void printNoDefinedRepoMsg() {
+    private static void printNoDefinedRepoMsg() {
         System.out.println("Error! Magit cannot perform this operation without a defined " +
                 "repository. \nPlease open an existing one or create a new one and then try again.");
         System.out.println();
     }
 
-    //todo add support for separate folder and repo names
-    public void createNewRepoFromScratch() {
-        Repository newRepo = null;
-        String newRepoName = null;
-        String requestedParentPath = null;
+
+    private String getValidUserString(String inputMsg, String tryAgainMsg, Predicate<String> validInput) {
+
         Scanner scanner = new Scanner(System.in);
-        boolean finishInputLoop = false;
-//        if (isRepoDefined())      --> is this needed?
-//            System.out.println("add q for changing repo");
+        String userInput;
+        boolean stopInputLoop = false;
         do {
-            System.out.print("Please enter your new repo name: ");
-            try {
-                newRepoName = scanner.nextLine();
-                //verify name basic requirements
-                if (newRepoName.isEmpty() || newRepoName.startsWith(" ") || newRepoName.endsWith(" ")) {
-                    System.out.println("Please enter a non-empty name which doesn't starts or ends with a space.");
-                    continue; //skip to end of the loop iteration (ask the user for a name again...)
-                }
+            System.out.println(inputMsg);
+            userInput = scanner.nextLine();
+            if (validInput.test(userInput))
+                stopInputLoop = true;
+            else
+                System.out.println(tryAgainMsg);
 
-                System.out.print("Please enter where to save your new repo (the parent directory " +
-                        "e.g. C:\\magit): ");
-                requestedParentPath = scanner.nextLine();
+        } while (!stopInputLoop);
 
-                Repository.checkNewRepoPath(requestedParentPath, newRepoName);
-                String newRepoPath = requestedParentPath.concat("\\" + newRepoName);
-                newRepo = Repository.newRepoFromScratchCreator(newRepoName, newRepoPath);
-
-                System.out.println("Your repo " + newRepoName + " has been created successfully at " + newRepoPath + " !");
-                finishInputLoop = true;
-
-            } catch (InvalidPathException e) {
-                System.out.println(e);
-                System.out.println("The parent path you supplied doesn't exist. Please enter an existing one.");
-            } catch (FileAlreadyExistsException e) {
-                System.out.println(e);
-                System.out.println("There is already a folder named " + newRepoName + " in the path " + requestedParentPath
-                        + " . Please supply another valid path or another name for your repo.");
-            } catch (IOException e) {
-                System.out.println(e);
-                System.out.println("General I/O Error! Please try to create the repo again.");
-                finishInputLoop = true;
-            } catch (Exception e) {
-                System.out.println(e);
-                System.out.println("Unknown Error! Please try to create the repo again.");
-                finishInputLoop = true;
-            }
-        } while (!finishInputLoop);
-
-        this.repo = newRepo;
+        return userInput;
     }
+
+
+    public void createNewRepoFromScratch() {
+
+        String nameInputMsg = "Please enter your new repo name: ";
+        String repoPathInputMsg = "Please enter where to save your new repo: ";
+        String tryAgainMsg = this.tryAgainNonEmptyOrSpacesInEdges;
+
+        String newRepoName = getValidUserString(nameInputMsg, tryAgainMsg, this.nonEmptyAndNoSpacesInEdgesString);
+        String requestedPath = getValidUserString(repoPathInputMsg, tryAgainMsg, this.nonEmptyAndNoSpacesInEdgesString);
+        try {
+            MagitFileUtils.newRepoOnDisk_PathValidation(requestedPath); //Exceptions will be catched if path invalid path given
+            this.repo = Repository.newRepoFromScratchCreator(newRepoName, requestedPath);
+            System.out.println("Your repo " + newRepoName + " has been created successfully at " + requestedPath + " !\n");
+        }
+        catch (InvalidPathException e) {
+            System.out.println(e);
+            System.out.println("The parent path you supplied doesn't exist. Please enter an existing one.");
+        } catch (FileAlreadyExistsException e) {
+            System.out.println(e);
+            System.out.println("There is already a folder named " + e.getFile() + " in the parent path. " +
+                    "Please supply a new folder name.");
+        } catch (Exception e) {
+            System.out.println("Oops... An error occurred, please return to main menu and try using this function again\n");
+            e.printStackTrace();
+            System.out.println();
+        }
+    }
+
 
     //todo verify error checking
 
     public void openRepoFromDisk() {
 
-        Scanner scanner = new Scanner(System.in);
-        String repoName, repoPath;
-        System.out.println("Please enter the location of your your existing repository:");
-        repoPath = scanner.nextLine();
-        //todo add check for .magit folder
+        String inputMsg = "Please enter the location of your your existing repository: ";
+        String tryAgainMsg = this.tryAgainNonEmptyOrSpacesInEdges;
 
-        //todo ask user for setting a name
-        int lastSlash = repoPath.lastIndexOf('\\');
-        repoName = repoPath.substring(lastSlash + 1);
-        this.repo = new Repository(repoName, repoPath);
-        //todo to load data (remember to load the head branch!!!)
+        String repoPath = getValidUserString(inputMsg, tryAgainMsg, this.nonEmptyAndNoSpacesInEdgesString);
 
-        //TEMPORARY!!!!
         try {
-            repo.createMasterBranch_TESTINT_ONLY();
-        } catch (IOException e) {
-            System.out.println("fuck");
+            if (MagitFileUtils.isExistingRepoPath(repoPath)) {
+
+                //todo get repoSettings from the file
+                int lastSlash = repoPath.lastIndexOf('\\');
+                String repoName = repoPath.substring(lastSlash + 1);
+                this.repo = new Repository(repoName, repoPath);
+                //todo to all load data
+
+                //TEMPORARY!!!!
+                try {
+                    repo.createMasterBranch_TESTINT_ONLY();
+                } catch (IOException e) {
+                    System.out.println("fuck");
+                    e.printStackTrace();
+                }
+                ///////
+
+            } else {
+                System.out.println("Invalid path. Please enter a valid existing path with \".magit\" folder inside it");
+            }
+        } catch (Exception e) {
+            System.out.println("Oops... An error occurred, please return to main menu and try using this function again\n");
             e.printStackTrace();
+            System.out.println();
         }
-        ///////
     }
 
 
@@ -120,6 +134,9 @@ public class Magit {
 
     public void commit() {
 
+        String inputMsg = "Please enter a description for the new commit:";
+        String tryAgainMsg = "Please enter a non-empty description.";
+
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
             return;
@@ -131,25 +148,15 @@ public class Magit {
             return;
         }
 
-        String commitDescription;
-        Scanner scanner = new Scanner(System.in);
-        boolean finishInputLoop = false;
-        do {
-            System.out.println("Please enter a description for the new commit:");
-            commitDescription = scanner.nextLine();
-            if (commitDescription.isEmpty())
-                System.out.println("Please enter a non-empty description.");
-            else {
-                finishInputLoop = true;
-                try {
-                    repo.newCommit(commitDescription);
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                    e.printStackTrace();
-                    System.out.println();
-                }
-            }
-        } while (!finishInputLoop);
+        String commitDescription = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
+        try {
+            repo.newCommit(commitDescription);
+        } catch (Exception e) {
+            System.out.println("Oops... An error occurred, please return to main menu and try using this function again\n");
+            e.printStackTrace();
+            System.out.println();
+        }
+
     }
 
 
@@ -170,10 +177,14 @@ public class Magit {
 
     public void inDevProgress() {
         System.out.println("This operation will be added soon");
+
+        Path testi = Paths.get("C:\\magit\\test666");
+        System.out.println(testi.getParent());
+        System.out.println(testi.getFileName());
     }
 
     /**
-     ********* Testing only section!!! ********************************************************************************
+     * ******** Testing only section!!! ********************************************************************************
      */
 
     public void printObject_TEST() {
