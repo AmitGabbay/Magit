@@ -41,7 +41,7 @@ public class MagitFileUtils {
      */
     public static void createNewRepoOnDisk(RepoSettings newRepoSettings) throws IOException {
 
-        Path newRepoPath = Paths.get(newRepoSettings.getPath());
+        Path newRepoPath = Paths.get(newRepoSettings.getStringPath());
         Path magitPath = newRepoPath.resolve(".magit");
 
         //create the new repository directory and the internal magit folders structure
@@ -67,6 +67,24 @@ public class MagitFileUtils {
 
         return Files.exists(magitPath);
     }
+
+
+    public static RepoSettings readRepoSettingsFromDisk(Path repoPath) throws IOException, ClassNotFoundException {
+
+        Path settingsPath = repoPath.resolve("RepoSettings");
+        RepoSettings settings;
+
+        try (ObjectInputStream in = new ObjectInputStream(
+                             new FileInputStream(settingsPath.toString()))) {
+
+            settings = (RepoSettings)in.readObject();
+        }
+
+        return settings;
+    }
+
+
+
 //    public static void traverseCommit(Repository repo, Commit commit) throws IOException {
 //
 //        //create "commit tree"

@@ -8,13 +8,13 @@ import java.io.Serializable;
 public class RepoSettings implements Serializable {
 
     private String name;
-    private String path; // ==location
+    private String stringPath; // ==location
     private RemoteRepo remoteRepo;
     private String headBranch = "master";
 
     public RepoSettings(String name, String path) {
         this.name = name;
-        this.path = path;
+        this.stringPath = path;
     }
 
     // TODO: 06/08/2019  c'tors for repo from xml/directory
@@ -24,8 +24,8 @@ public class RepoSettings implements Serializable {
         return name;
     }
 
-    public String getPath() {
-        return path;
+    public String getStringPath() {
+        return stringPath;
     }
 
 

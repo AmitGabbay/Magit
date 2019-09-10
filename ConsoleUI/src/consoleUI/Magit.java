@@ -18,14 +18,21 @@ import java.util.function.Predicate;
 
 public class Magit {
 
+    private Repository repo = null;
+
     private final String tryAgainNonEmptyOrSpacesInEdges = "Please enter a non-empty input which doesn't starts or " +
             "ends with a space.";
-    private Repository repo = null;
     private Predicate<String> nonEmptyAndNoSpacesInEdgesString = v -> !(v.isEmpty() || v.startsWith(" ") || v.endsWith(" "));
 
     private static void printNoDefinedRepoMsg() {
         System.out.println("Error! Magit cannot perform this operation without a defined " +
                 "repository. \nPlease open an existing one or create a new one and then try again.");
+        System.out.println();
+    }
+
+    private void handleGenericException(Exception e){
+        System.out.println("Oops... An error occurred! Please watch the details below and try using the function again\n");
+        e.printStackTrace();
         System.out.println();
     }
 
@@ -70,14 +77,10 @@ public class Magit {
             System.out.println("There is already a folder named " + e.getFile() + " in the parent path. " +
                     "Please supply a new folder name.");
         } catch (Exception e) {
-            System.out.println("Oops... An error occurred, please return to main menu and try using this function again\n");
-            e.printStackTrace();
-            System.out.println();
+            handleGenericException(e);
         }
     }
 
-
-    //todo verify error checking
 
     public void openRepoFromDisk() {
 
@@ -88,31 +91,46 @@ public class Magit {
 
         try {
             if (MagitFileUtils.isExistingRepoPath(repoPath)) {
-
-                //todo get repoSettings from the file
-                int lastSlash = repoPath.lastIndexOf('\\');
-                String repoName = repoPath.substring(lastSlash + 1);
-                this.repo = new Repository(repoName, repoPath);
-                //todo to all load data
-
-                //TEMPORARY!!!!
-                try {
-                    repo.createMasterBranch_TESTINT_ONLY();
-                } catch (IOException e) {
-                    System.out.println("fuck");
-                    e.printStackTrace();
-                }
-                ///////
-
-            } else {
-                System.out.println("Invalid path. Please enter a valid existing path with \".magit\" folder inside it");
+                this.repo = Repository.openRepoFromFolder(repoPath);
+                System.out.println("The repository " + repo.getName() + " has opened successfully!\n");
             }
+             else
+                System.out.println("Invalid path. Please enter a valid existing path with \".magit\" folder inside it");
+
         } catch (Exception e) {
-            System.out.println("Oops... An error occurred, please return to main menu and try using this function again\n");
-            e.printStackTrace();
-            System.out.println();
+           handleGenericException(e);
         }
     }
+
+    public void changeUsername() {
+
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+        String inputMsg = "Please enter the username to change to: ";
+        String tryAgainMsg = "Please enter a non-empty name.";
+
+        try {
+        String username = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
+        repo.setActiveUser(username);
+        System.out.println("Changed successfully to work as "+ username +"!\n");
+        }
+        catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
     public void checkWcStatus() {
@@ -123,12 +141,18 @@ public class Magit {
         }
 
         printCurrentRepoDetails();
-        boolean anyChanges = repo.checkForWcPendingChanges();
+        try {
+            boolean anyChanges = repo.checkForWcPendingChanges();
 
-        if (anyChanges)
-            System.out.println(repo.getWcPendingChanges());
-        else
-            System.out.println("There are no pending changes for commit");
+            if (anyChanges)
+                System.out.println(repo.getWcPendingChanges());
+            else
+                System.out.println("There are no pending changes for commit");
+        }
+
+        catch (Exception e) {
+            handleGenericException(e);
+        }
     }
 
 
@@ -151,12 +175,11 @@ public class Magit {
         String commitDescription = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
         try {
             repo.newCommit(commitDescription);
-        } catch (Exception e) {
-            System.out.println("Oops... An error occurred, please return to main menu and try using this function again\n");
-            e.printStackTrace();
-            System.out.println();
+            System.out.println("New commit has been created!\n");
         }
-
+        catch (Exception e) {
+            handleGenericException(e);
+        }
     }
 
 

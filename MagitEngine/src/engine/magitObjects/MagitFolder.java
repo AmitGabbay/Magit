@@ -2,12 +2,14 @@ package engine.magitObjects;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.*;
 
 public class MagitFolder extends MagitObject {
 
     private final Map<String, MagitObjMetadata> objects;
-    private final transient StringBuilder contentAsText;
+    private transient StringBuilder contentAsText;
 
     public MagitFolder() {
         objects = new TreeMap<>();
@@ -18,7 +20,7 @@ public class MagitFolder extends MagitObject {
         objects.put(objData.getName(), objData);
     }
 
-    public String getTextContent(){
+    public String getTextContent() {
         updateTextContent();
         return contentAsText.toString();
     }
@@ -40,7 +42,9 @@ public class MagitFolder extends MagitObject {
         return objects.values();
     }
 
-    public MagitObjMetadata getObjMetadataByName(String objName) {return objects.get(objName);}
+    public MagitObjMetadata getObjMetadataByName(String objName) {
+        return objects.get(objName);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -59,9 +63,15 @@ public class MagitFolder extends MagitObject {
     @Override
     public String toString() {
         return getTextContent();
-              //  + " " + path;
     }
 
+    /**
+     * Overrides default readObject method in the serialization mechanism to restore a MagitFolder correctly
+     */
+    private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+        ois.defaultReadObject();
+        this.contentAsText = new StringBuilder();
+    }
 
 }
 

@@ -51,7 +51,6 @@ public class Commit implements Sha1Able {
                 ", description='" + description + '\'' +
                 ", creationTime='" + creationTime + '\'' +
                 ", author='" + author + '\'' +
-                ", content='" + content + '\'' +
                 '}';
     }
 

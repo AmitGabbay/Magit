@@ -1,7 +1,10 @@
 package engine.repo;
 
 import com.sun.istack.internal.NotNull;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -21,6 +24,13 @@ public class Branch {
     {
         this.name = name;
         this.pointedCommit = pointedCommit;
+        this.isRemote = false;
+        this.tracking = false;
+    }
+
+    public Branch(File branchFile) throws IOException {
+        this.name=branchFile.getName();
+        this.pointedCommit= FileUtils.readFileToString(branchFile, "UTF-8");
         this.isRemote = false;
         this.tracking = false;
     }

@@ -10,21 +10,27 @@ import java.util.Random;
 
 public class Blob extends MagitObject {
 
-   private String content;
+    private String content;
 
-    public Blob(File file) {
-        try {
-            content = FileUtils.readFileToString(file, "UTF-8");
-            System.out.println(content); //test
-        }
-        catch (IOException e) {
-            e.printStackTrace(); //todo Notify in another way if not working in consoleUI
-            Random intGenerator = new Random();
-            content = "Error! couldn't get this file content!\n" +
-                    "Generated random ID: " + intGenerator.nextInt();
-            System.out.println(content); //test
-        }
-   }
+    public Blob(File file) throws IOException {
+        content = FileUtils.readFileToString(file, "UTF-8");
+    }
+
+//    public Blob(File file) {
+//
+//        try {
+//            content = FileUtils.readFileToString(file, "UTF-8");
+//            System.out.println(content); //test
+//        } catch (IOException e) {
+//            e.printStackTrace(); // Notify in another way if not working in consoleUI
+//            Random intGenerator = new Random();
+//            content = "Error! couldn't get this file content!\n" +
+//                    "Generated random ID: " + intGenerator.nextInt();
+//            System.out.println(content); //test
+//        }
+//
+//    }
+
 
     @Override
     public String calcSha1() {
