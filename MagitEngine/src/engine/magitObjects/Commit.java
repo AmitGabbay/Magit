@@ -54,6 +54,11 @@ public class Commit implements Sha1Able {
                 '}';
     }
 
+    public String getInfoForUI(){
+        return String.format("Description: %s\nCreated by %s on %s\n", description, author, creationTime);
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

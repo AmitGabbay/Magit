@@ -30,7 +30,7 @@ public class Magit {
         System.out.println();
     }
 
-    private void handleGenericException(Exception e){
+    private void handleGenericException(Exception e) {
         System.out.println("Oops... An error occurred! Please watch the details below and try using the function again\n");
         e.printStackTrace();
         System.out.println();
@@ -68,8 +68,7 @@ public class Magit {
             MagitFileUtils.newRepoOnDisk_PathValidation(requestedPath); //Exceptions will be catched if path invalid path given
             this.repo = Repository.newRepoFromScratchCreator(newRepoName, requestedPath);
             System.out.println("Your repo " + newRepoName + " has been created successfully at " + requestedPath + " !\n");
-        }
-        catch (InvalidPathException e) {
+        } catch (InvalidPathException e) {
             System.out.println(e);
             System.out.println("The parent path you supplied doesn't exist. Please enter an existing one.");
         } catch (FileAlreadyExistsException e) {
@@ -93,12 +92,11 @@ public class Magit {
             if (MagitFileUtils.isExistingRepoPath(repoPath)) {
                 this.repo = Repository.openRepoFromFolder(repoPath);
                 System.out.println("The repository " + repo.getName() + " has opened successfully!\n");
-            }
-             else
+            } else
                 System.out.println("Invalid path. Please enter a valid existing path with \".magit\" folder inside it");
 
         } catch (Exception e) {
-           handleGenericException(e);
+            handleGenericException(e);
         }
     }
 
@@ -112,25 +110,36 @@ public class Magit {
         String tryAgainMsg = "Please enter a non-empty name.";
 
         try {
-        String username = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
-        repo.setActiveUser(username);
-        System.out.println("Changed successfully to work as "+ username +"!\n");
-        }
-        catch (Exception e) {
+            String username = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
+            repo.setActiveUser(username);
+            System.out.println("Changed successfully to work as " + username + "!\n");
+        } catch (Exception e) {
             handleGenericException(e);
         }
     }
 
+    public void showCurrentCommitObjects(){
 
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+        if (repo.isNoCommits()) {
+            System.out.println("There are no commits on this Repository. Please commit and try again.");
+            return;
+        }
 
+        try {
+            Commit currentCommit = repo.getCurrentCommit();
+            System.out.println("CurrentCommit: " + currentCommit.calcSha1());
+            System.out.println(currentCommit.getInfoForUI());
+            System.out.println(repo.getCurrentCommitObjectsData());
 
+        } catch (Exception e) {
+            handleGenericException(e);
+        }
 
-
-
-
-
-
-
+    }
 
 
     public void checkWcStatus() {
@@ -148,9 +157,7 @@ public class Magit {
                 System.out.println(repo.getWcPendingChanges());
             else
                 System.out.println("There are no pending changes for commit");
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
             handleGenericException(e);
         }
     }
@@ -176,8 +183,7 @@ public class Magit {
         try {
             repo.newCommit(commitDescription);
             System.out.println("New commit has been created!\n");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             handleGenericException(e);
         }
     }

@@ -93,8 +93,11 @@ public class MainMenu {
                 magit.changeUsername();
                 break;
 
-            case OPEN_FROM_XML:
             case SHOW_CURRENT_COMMIT:
+                magit.showCurrentCommitObjects();
+                break;
+
+            case OPEN_FROM_XML:
             case SHOW_BRANCHES:
             case NEW_BRANCH:
             case DELETE_BRANCH:

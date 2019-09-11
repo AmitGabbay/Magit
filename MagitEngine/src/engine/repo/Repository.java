@@ -87,7 +87,7 @@ public class Repository {
         return pendingChangesWaiting;
     }
 
-    private boolean isNoCommits() {
+    public boolean isNoCommits() {
         return commits.isEmpty();
     }
 
@@ -278,6 +278,39 @@ public class Repository {
 
 
         this.currentCommitObjects.put(object.calcSha1(), object); //add object to currentCommit table
+    }
+
+    public String getCurrentCommitObjectsData() throws Exception {
+
+        StringBuilder commitObjectsData = new StringBuilder();
+        String repoRootSha1 = getCurrentCommit().getRootFolderSha1();
+        MagitFolder repoRoot = (MagitFolder) currentCommitObjects.get(repoRootSha1);
+        String repoRootPath = fileUtils.getRepoPath().toString();
+
+        getCurrentCommitObjectsData_Rec(commitObjectsData, repoRoot, repoRootPath, 0);
+
+        return commitObjectsData.toString();
+    }
+
+    private void getCurrentCommitObjectsData_Rec(StringBuilder commitObjectsData, MagitFolder parentFolder,
+                                                 String path, int treeLevel) {
+
+        Collection<MagitObjMetadata> magitFolderContents = parentFolder.getObjectsValues();
+        for (MagitObjMetadata currentObjectData : magitFolderContents) {
+
+            String currentObjectPath = path.concat("\\" + currentObjectData.getName());
+            for (int i = 0; i <= treeLevel; i++)
+                commitObjectsData.append("\t");
+            commitObjectsData.append(currentObjectPath + ": ");
+            commitObjectsData.append(currentObjectData.getInfoForUI());
+
+            if (currentObjectData.getObjectType() == MagitObjectType.FOLDER) {
+                String currentFolderSha1 = currentObjectData.getSha1();
+                MagitFolder currentFolder = (MagitFolder) currentCommitObjects.get(currentFolderSha1);
+                getCurrentCommitObjectsData_Rec(commitObjectsData, currentFolder, currentObjectPath, treeLevel+1);
+                //commitObjectsData.append("TEST\n");
+            }
+        }
     }
 
 

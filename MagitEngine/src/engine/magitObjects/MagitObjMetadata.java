@@ -55,4 +55,8 @@ public class MagitObjMetadata implements Serializable {
         return lastModifiedTime;
     }
 
+    public String getInfoForUI(){
+        return String.format("%s, Sha1: %s, Last modifier: %s, Last updated: %s\n", objectType, sha1,lastModifier, lastModifiedTime);
+    }
+
 }
