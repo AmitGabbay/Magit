@@ -54,7 +54,7 @@ public class Repository {
      * @return
      * @throws IOException
      */
-    public static Repository newRepoFromScratchCreator(String newRepoName, String requestedPath) throws IOException {
+    public static Repository newRepoFromScratchCreator(String newRepoName, String requestedPath) throws Exception {
 
         RepoSettings settings = new RepoSettings(newRepoName, requestedPath);
         Repository newRepo = new Repository(settings);
@@ -141,7 +141,7 @@ public class Repository {
         fileUtils.updateHeadFileOnDisk(branch);
     }
 
-    public void createMasterBranch_TESTINT_ONLY() throws IOException {
+    public void createMasterBranch_TESTINT_ONLY() throws Exception {
         Branch master = Branch.createBlankMasterBranch();
         addNewBranchToRepo(master);
         setActiveBranch(master);
@@ -243,7 +243,15 @@ public class Repository {
         fileUtils.writeObjectToDisk(newCommit); //write the commit on disk
     }
 
-    private void addNewBranchToRepo(Branch newBranch) throws IOException {
+    public boolean isBranchNameExists(String name){
+        return branches.containsKey(name);
+    }
+
+    public void addNewBranchToRepo(Branch newBranch) throws Exception {
+        //UI should check that the new branch name doesn't already exists
+        if (isBranchNameExists(newBranch.getName())) //Additional check to prevent erroneous use
+            throw new Exception("Already got a branch with that name. Overriding is not allowed!");
+
         branches.put(newBranch.getName(), newBranch);
         fileUtils.writeBranchToDisk(newBranch);
     }
