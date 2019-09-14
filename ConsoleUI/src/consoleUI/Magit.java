@@ -1,5 +1,6 @@
 package consoleUI;
 
+import engine.repo.Branch;
 import engine.repo.Repository;
 import engine.magitObjects.Commit;
 import engine.magitObjects.MagitObject;
@@ -138,7 +139,6 @@ public class Magit {
         } catch (Exception e) {
             handleGenericException(e);
         }
-
     }
 
 
@@ -184,6 +184,37 @@ public class Magit {
             repo.newCommit(commitDescription);
             System.out.println("New commit has been created!\n");
         } catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
+
+    public void createNewBranch(){
+
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+        if (repo.isNoCommits()) {
+            System.out.println("There are no commits on this Repository. Please commit and try again.");
+            return;
+        }
+
+        String inputMsg = "Please enter the new branch name: ";
+        String tryAgainMsg = "Please enter a non-empty name with no whitespaces.";
+        try {
+            String newBranchName = getValidUserString(inputMsg, tryAgainMsg, v -> v.matches(("\\S+"))); /*single word with
+                                                                                                    no whitespaces*/
+            if (repo.isBranchNameExists(newBranchName)) {
+                System.out.println("Already got a branch with that name. Please try again with another name.");
+                return;
+            }
+
+            String pointedCommitSha1 = repo.getActiveBranch().getPointedCommit();
+            Branch newBranch = new Branch(newBranchName, pointedCommitSha1);
+            repo.addNewBranchToRepo(newBranch);
+            System.out.println("The branch " + newBranchName + " created successfully!");
+
+            } catch (Exception e) {
             handleGenericException(e);
         }
     }

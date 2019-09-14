@@ -20,8 +20,11 @@ public class Branch {
     private String trackingAfter;
 
     
-    public Branch(String name, String pointedCommit)
-    {
+    public Branch(String name, String pointedCommit) throws Exception {
+
+        if (name.equalsIgnoreCase("HEAD"))
+            throw new Exception("HEAD file overriding is not allowed!!!");
+
         this.name = name;
         this.pointedCommit = pointedCommit;
         this.isRemote = false;

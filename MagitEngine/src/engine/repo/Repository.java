@@ -244,7 +244,7 @@ public class Repository {
     }
 
     public boolean isBranchNameExists(String name){
-        return branches.containsKey(name);
+        return branches.containsKey(name.toLowerCase()); //lower case to support case insensitive
     }
 
     public void addNewBranchToRepo(Branch newBranch) throws Exception {
@@ -252,7 +252,7 @@ public class Repository {
         if (isBranchNameExists(newBranch.getName())) //Additional check to prevent erroneous use
             throw new Exception("Already got a branch with that name. Overriding is not allowed!");
 
-        branches.put(newBranch.getName(), newBranch);
+        branches.put(newBranch.getName().toLowerCase(), newBranch); //lower case to support case insensitive
         fileUtils.writeBranchToDisk(newBranch);
     }
 
@@ -598,7 +598,7 @@ public class Repository {
             for (File branchFile : branchFilesList) {
                 if (!branchFile.getName().equals("HEAD")) {
                     Branch b = new Branch(branchFile);
-                    Repository.this.branches.put(b.getName(), b);
+                    Repository.this.branches.put(b.getName().toLowerCase(), b); //lower case to support case insensitive
                 }
             }
 
