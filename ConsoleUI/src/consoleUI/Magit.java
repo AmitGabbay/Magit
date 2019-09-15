@@ -235,6 +235,35 @@ public class Magit {
         }
     }
 
+    public void deleteBranch(){
+
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        String inputMsg = "Please enter the name of the branch you wish to delete:";
+        String tryAgainMsg = "Please enter a non-empty name.";
+        try {
+            String branchToDeleteName = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
+
+            if (!repo.isBranchNameExists(branchToDeleteName)){
+                System.out.println("No such branch found... Please try again with another branch name.");
+                return;
+            }
+            String headBranchName = repo.getActiveBranchName();
+            if (branchToDeleteName.equalsIgnoreCase(headBranchName)){
+                System.out.println("Cannot delete the active branch! Please checkout to another branch and then try again");
+                return;
+            }
+
+            repo.deleteBranch(branchToDeleteName);
+            System.out.println("The branch " + branchToDeleteName + " was deleted successfully.");
+
+        } catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
 
     public boolean isRepoDefined() {
         return this.repo != null;

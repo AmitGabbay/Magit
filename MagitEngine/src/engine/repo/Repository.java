@@ -7,6 +7,7 @@ import org.apache.commons.collections4.MapUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -131,6 +132,9 @@ public class Repository {
         return branches.get(basicSettings.getHeadBranch());
     }
 
+    public String getActiveBranchName(){
+        return getActiveBranch().getName();
+    }
     /**
      * Note: This is note a full checkout method, just HEAD branch changer!
      *
@@ -338,6 +342,24 @@ public class Repository {
             allBranchesInfo.append("\n");
         }
         return allBranchesInfo.toString();
+    }
+
+    /**
+     * @param branchName The branch name to delete
+     * @throws IllegalArgumentException thrown if such branch doesn't exist or if this branch is the head Branch
+     */
+    public void deleteBranch(String branchName) throws IllegalArgumentException, IOException {
+
+        branchName = branchName.toLowerCase(); //lower case to support case insensitive
+        Branch branchToDelete = branches.get(branchName);
+        if (branchToDelete==null)
+            throw new IllegalArgumentException("Branch doesn't exists");
+        if (branchToDelete==getActiveBranch())
+            throw new IllegalArgumentException("Cannot delete the active branch!");
+
+        branches.remove(branchName);
+        fileUtils.deleteBranchFromDisk(branchName);
+
     }
 
     //******************* Test/Archive zone! ********************************************************************
@@ -654,6 +676,11 @@ public class Repository {
                 throw new Exception("Cannot find any commits on this repo");
             MapUtils.verbosePrint(System.out, null, commits); //test
             // MapUtils.verbosePrint(System.out, null, repoObjects); //test
+        }
+
+        private void deleteBranchFromDisk(String branchToDeleteName) throws IOException {
+            Path branchToDeletePath = branchesPath.resolve(branchToDeleteName);
+            Files.delete(branchToDeletePath);
         }
 
 

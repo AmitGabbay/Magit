@@ -105,8 +105,11 @@ public class MainMenu {
                 magit.createNewBranch();
                 break;
 
-            case OPEN_FROM_XML:
             case DELETE_BRANCH:
+                magit.deleteBranch();
+                break;
+
+            case OPEN_FROM_XML:
             case CHECKOUT:
             case SHOW_COMMIT_HISTORY:
                 magit.inDevProgress();
