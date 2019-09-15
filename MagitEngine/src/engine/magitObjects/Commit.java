@@ -35,6 +35,10 @@ public class Commit implements Sha1Able {
         return rootFolderSha1;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     @Override
     public String calcSha1() {
 

@@ -321,6 +321,24 @@ public class Repository {
         }
     }
 
+    public String getAllBranchesInfo()
+    {
+        StringBuilder allBranchesInfo = new StringBuilder();
+        String headBranchName = getActiveBranch().getName();
+
+        for (Branch b : branches.values()) {
+            Commit pointedCommit = commits.get(b.getPointedCommit());
+            String commitDescription =  pointedCommit.getDescription();
+
+            allBranchesInfo.append(b);
+            allBranchesInfo.append("\tDescription: " + commitDescription);
+            if (b.getName().equals(headBranchName))
+                allBranchesInfo.append("\t*Head branch*");
+
+            allBranchesInfo.append("\n");
+        }
+        return allBranchesInfo.toString();
+    }
 
     //******************* Test/Archive zone! ********************************************************************
 

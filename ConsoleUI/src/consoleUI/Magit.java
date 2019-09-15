@@ -219,6 +219,22 @@ public class Magit {
         }
     }
 
+    public void showAllBranches()
+    {
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        try {
+            System.out.println(repo.getName() + " branches info:\n");
+            System.out.println(repo.getAllBranchesInfo());
+
+        } catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
+
 
     public boolean isRepoDefined() {
         return this.repo != null;
@@ -238,9 +254,7 @@ public class Magit {
     public void inDevProgress() {
         System.out.println("This operation will be added soon");
 
-        Path testi = Paths.get("C:\\magit\\test666");
-        System.out.println(testi.getParent());
-        System.out.println(testi.getFileName());
+        System.out.println(repo.getActiveBranch());
     }
 
     /**

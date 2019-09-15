@@ -78,6 +78,12 @@ public class Branch {
     }
 
     @Override
+    public String toString() {
+        return "Branch name: " + name +
+                " \tPointed Commit: " + pointedCommit;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(name, pointedCommit, isRemote, tracking, trackingAfter);
     }

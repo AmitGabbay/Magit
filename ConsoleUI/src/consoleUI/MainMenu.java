@@ -97,12 +97,15 @@ public class MainMenu {
                 magit.showCurrentCommitObjects();
                 break;
 
+            case SHOW_BRANCHES:
+                magit.showAllBranches();
+                break;
+
             case NEW_BRANCH:
                 magit.createNewBranch();
                 break;
 
             case OPEN_FROM_XML:
-            case SHOW_BRANCHES:
             case DELETE_BRANCH:
             case CHECKOUT:
             case SHOW_COMMIT_HISTORY:
