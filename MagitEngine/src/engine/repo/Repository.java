@@ -20,7 +20,7 @@ public class Repository {
 
     public final static String DATE_FORMAT = "dd.MM.yyyy-HH:mm:ss:SSS";
 
-    private final RepoSettings basicSettings;
+    private final RepoSettings settings;
     private final Map<String, Branch> branches; //index is name
     private final Map<String, MagitObject> repoObjects; //index is sha1
     private final Map<String, Commit> commits; //index is sha1
@@ -38,7 +38,7 @@ public class Repository {
 
 
     public Repository(RepoSettings settings) {
-        this.basicSettings = settings;
+        this.settings = settings;
         this.branches = new HashMap<>();
         this.repoObjects = new HashMap<>();
         this.commits = new HashMap<>();
@@ -59,11 +59,11 @@ public class Repository {
 
         RepoSettings settings = new RepoSettings(newRepoName, requestedPath);
         Repository newRepo = new Repository(settings);
-        MagitFileUtils.createNewRepoOnDisk(newRepo.getBasicSettings());
+        MagitFileUtils.createNewRepoFoldersOnDisk(newRepo.getSettings());
 
         Branch master = Branch.createBlankMasterBranch();
         newRepo.addNewBranchToRepo(master);
-        newRepo.setActiveBranch(master);
+        newRepo.setActiveBranch(master); //HEAD and RepoSettings Files will be created on this action
         return newRepo;
     }
 
@@ -93,15 +93,15 @@ public class Repository {
     }
 
     public String getName() {
-        return basicSettings.getName();
+        return settings.getName();
     }
 
     public String getStringPath() {
-        return basicSettings.getStringPath();
+        return settings.getStringPath();
     }
 
-    public RepoSettings getBasicSettings() {
-        return basicSettings;
+    public RepoSettings getSettings() {
+        return settings;
     }
 
     public Map<String, MagitObject> getObjectsAsMap() {
@@ -129,26 +129,21 @@ public class Repository {
     }
 
     public Branch getActiveBranch() {
-        return branches.get(basicSettings.getHeadBranch());
+        return branches.get(settings.getHeadBranch().toLowerCase());
     }
 
-    public String getActiveBranchName(){
-        return getActiveBranch().getName();
-    }
     /**
      * Note: This is note a full checkout method, just HEAD branch changer!
      *
      * @param branch Branch to set as active (the HEAD branch)
      */
     private void setActiveBranch(Branch branch) throws IOException {
-        basicSettings.setHeadBranch(branch.getName());
-        fileUtils.updateHeadFileOnDisk(branch);
+        settings.setHeadBranch(branch.getName());
+        fileUtils.updateHeadBranchOnDisk(branch);
     }
 
-    public void createMasterBranch_TESTINT_ONLY() throws Exception {
-        Branch master = Branch.createBlankMasterBranch();
-        addNewBranchToRepo(master);
-        setActiveBranch(master);
+    public String getActiveBranchName() {
+        return getActiveBranch().getName();
     }
 
     public Commit getCurrentCommit() {
@@ -247,7 +242,7 @@ public class Repository {
         fileUtils.writeObjectToDisk(newCommit); //write the commit on disk
     }
 
-    public boolean isBranchNameExists(String name){
+    public boolean isBranchNameExists(String name) {
         return branches.containsKey(name.toLowerCase()); //lower case to support case insensitive
     }
 
@@ -319,20 +314,19 @@ public class Repository {
             if (currentObjectData.getObjectType() == MagitObjectType.FOLDER) {
                 String currentFolderSha1 = currentObjectData.getSha1();
                 MagitFolder currentFolder = (MagitFolder) currentCommitObjects.get(currentFolderSha1);
-                getCurrentCommitObjectsData_Rec(commitObjectsData, currentFolder, currentObjectPath, treeLevel+1);
+                getCurrentCommitObjectsData_Rec(commitObjectsData, currentFolder, currentObjectPath, treeLevel + 1);
                 //commitObjectsData.append("TEST\n");
             }
         }
     }
 
-    public String getAllBranchesInfo()
-    {
+    public String getAllBranchesInfo() {
         StringBuilder allBranchesInfo = new StringBuilder();
         String headBranchName = getActiveBranch().getName();
 
         for (Branch b : branches.values()) {
             Commit pointedCommit = commits.get(b.getPointedCommit());
-            String commitDescription =  pointedCommit.getDescription();
+            String commitDescription = pointedCommit.getDescription();
 
             allBranchesInfo.append(b);
             allBranchesInfo.append("\tDescription: " + commitDescription);
@@ -344,22 +338,40 @@ public class Repository {
         return allBranchesInfo.toString();
     }
 
-    /**
-     * @param branchName The branch name to delete
-     * @throws IllegalArgumentException thrown if such branch doesn't exist or if this branch is the head Branch
-     */
-    public void deleteBranch(String branchName) throws IllegalArgumentException, IOException {
 
-        branchName = branchName.toLowerCase(); //lower case to support case insensitive
-        Branch branchToDelete = branches.get(branchName);
-        if (branchToDelete==null)
-            throw new IllegalArgumentException("Branch doesn't exists");
-        if (branchToDelete==getActiveBranch())
-            throw new IllegalArgumentException("Cannot delete the active branch!");
+    public void deleteBranch(Branch branchToDelete) throws IOException {
 
-        branches.remove(branchName);
-        fileUtils.deleteBranchFromDisk(branchName);
+        branches.remove(branchToDelete.getName().toLowerCase());
+        fileUtils.deleteBranchFromDisk(branchToDelete.getName());
+    }
 
+    //todo how to stop on the branch's first commit?
+    public String getActiveBranchCommitsInfo() {
+
+        StringBuilder commitsInfo = new StringBuilder();
+        if (isNoCommits())
+            commitsInfo.append("No commits yet.");
+
+        Commit currentCommit = getCurrentCommit();
+        while (currentCommit != null) {
+            commitsInfo.append(currentCommit.getInfoForUI2());
+            commitsInfo.append("\n");
+            currentCommit = commits.get(currentCommit.getParentCommitSha1());
+        }
+        return commitsInfo.toString();
+    }
+
+
+    public void checkout(Branch branchToCheckout) throws IOException {
+
+        setActiveBranch(branchToCheckout);
+        //todo work from here
+        //branches.remove(branchName);
+        //fileUtils.deleteBranchFromDisk(branchName);
+    }
+
+    public Branch getBranch(String branchName) {
+        return branches.get(branchName.toLowerCase());
     }
 
     //******************* Test/Archive zone! ********************************************************************
@@ -616,17 +628,28 @@ public class Repository {
             }
         }
 
-        //Create a new HEAD file on disk, or override an existing one
-        private void updateHeadFileOnDisk(Branch newActiveBranch) throws IOException {
+        //Creates Head and RepoSettings files, or overrides them
+        private void updateHeadBranchOnDisk(Branch newHeadBranch) throws IOException {
 
-            final Path HeadFilePath = branchesPath.resolve("HEAD"); //todo verify that cannot be overwritten by a new branch
+            //Write the HEAD file (a string defining the head branch name) on disk
+            final Path HeadFilePath = branchesPath.resolve("HEAD");
             try (Writer out = new BufferedWriter(
                     new OutputStreamWriter(
                             new FileOutputStream(HeadFilePath.toString()), StandardCharsets.UTF_8))) {
 
-                out.write(newActiveBranch.getName());
+                out.write(newHeadBranch.getName());
+            }
+
+            //write the repo settings file on the filesystem (at /<repoName>/.magit)
+            Path repoSettingsFile = magitPath.resolve("RepoSettings");
+            try (ObjectOutputStream out =
+                         new ObjectOutputStream(
+                                 new FileOutputStream(repoSettingsFile.toString()))) {
+                out.writeObject(Repository.this.settings);
+                out.flush();
             }
         }
+
 
         private void loadBranchesFromDisk() throws Exception {
 

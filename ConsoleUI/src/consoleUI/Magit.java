@@ -246,24 +246,77 @@ public class Magit {
         String tryAgainMsg = "Please enter a non-empty name.";
         try {
             String branchToDeleteName = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
-
-            if (!repo.isBranchNameExists(branchToDeleteName)){
+            Branch branchToDelete = repo.getBranch(branchToDeleteName);
+            if (branchToDelete==null){
                 System.out.println("No such branch found... Please try again with another branch name.");
                 return;
             }
-            String headBranchName = repo.getActiveBranchName();
-            if (branchToDeleteName.equalsIgnoreCase(headBranchName)){
-                System.out.println("Cannot delete the active branch! Please checkout to another branch and then try again");
+            if (branchToDelete==repo.getActiveBranch()){
+                System.out.println("Cannot delete the active branch! Please checkout to another branch and try again");
                 return;
             }
 
-            repo.deleteBranch(branchToDeleteName);
+            repo.deleteBranch(branchToDelete);
             System.out.println("The branch " + branchToDeleteName + " was deleted successfully.");
 
         } catch (Exception e) {
             handleGenericException(e);
         }
     }
+
+    public void showActiveBranchCommitHistory(){
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        try {
+            System.out.println("Showing Commit history for the active branch " + repo.getActiveBranchName()+ ":\n");
+            System.out.println(repo.getActiveBranchCommitsInfo());
+
+        } catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
+
+    public void checkout(){
+
+        if (!isRepoDefined()) {
+            printNoDefinedRepoMsg();
+            return;
+        }
+
+        String inputMsg = "Please enter the name of the branch you wish to checkout:";
+        String tryAgainMsg = "Please enter a non-empty name.";
+        try {
+            String branchToCheckoutName = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
+            Branch branchToCheckout = repo.getBranch(branchToCheckoutName);
+            if (branchToCheckout == null){
+                System.out.println("No such branch found... Please try again with another branch name.");
+                return;
+            }
+            if (branchToCheckout == repo.getActiveBranch()) {
+                System.out.println("Cannot change to the active branch! Please try again with another branch.");
+                return;
+            }
+
+            repo.checkout(branchToCheckout);
+//            System.out.println("The branch " + branchToCheckoutName + " was deleted successfully.");
+
+        } catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 
     public boolean isRepoDefined() {
         return this.repo != null;
@@ -283,7 +336,7 @@ public class Magit {
     public void inDevProgress() {
         System.out.println("This operation will be added soon");
 
-        System.out.println(repo.getActiveBranch());
+        System.out.println(repo.getActiveBranchCommitsInfo());
     }
 
     /**

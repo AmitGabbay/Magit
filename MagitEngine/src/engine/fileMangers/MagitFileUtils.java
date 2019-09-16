@@ -35,11 +35,11 @@ public class MagitFileUtils {
 
     /**
      * Should Be used only after path validation using the CreateNewRepoOnDisk_PathValidation() method!
-     *
+     * HEAD and RepoSettings Files won't be created in this method, but in the master branch creation.
      * @param newRepoSettings
      * @throws IOException
      */
-    public static void createNewRepoOnDisk(RepoSettings newRepoSettings) throws IOException {
+    public static void createNewRepoFoldersOnDisk(RepoSettings newRepoSettings) throws IOException {
 
         Path newRepoPath = Paths.get(newRepoSettings.getStringPath());
         Path magitPath = newRepoPath.resolve(".magit");
@@ -50,16 +50,8 @@ public class MagitFileUtils {
         //System.out.println(magitPath.toString()); //test
         Files.createDirectory(magitPath.resolve("objects"));
         Files.createDirectory(magitPath.resolve("branches"));
-
-        //write the repo setting file the filesystem (at /<repoName>/.magit)
-        Path repoSettingsFile = magitPath.resolve("RepoSettings");
-        try (ObjectOutputStream out =
-                     new ObjectOutputStream(
-                             new FileOutputStream(repoSettingsFile.toString()))) {
-            out.writeObject(newRepoSettings);
-            out.flush();
-        }
     }
+
 
     public static boolean isExistingRepoPath(String path) {
         Path repoPath = Paths.get(path);
@@ -84,6 +76,9 @@ public class MagitFileUtils {
     }
 
 
+    /*
+     ********************* test only section!!!*********************************
+    */
 
 //    public static void traverseCommit(Repository repo, Commit commit) throws IOException {
 //
@@ -106,11 +101,6 @@ public class MagitFileUtils {
 //        }
 //    }
 
-
-
-    /*
-     ********************* test only section!!!*********************************
-     */
 
 
 } //class end

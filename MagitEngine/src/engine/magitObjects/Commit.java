@@ -35,6 +35,10 @@ public class Commit implements Sha1Able {
         return rootFolderSha1;
     }
 
+    public String getParentCommitSha1() {
+        return parentCommitSha1;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -60,6 +64,10 @@ public class Commit implements Sha1Able {
 
     public String getInfoForUI(){
         return String.format("Description: %s\nCreated by %s on %s\n", description, author, creationTime);
+    }
+
+    public String getInfoForUI2(){
+        return String.format("%s, Massage: %s, Created on %s by %s", calcSha1(), description, creationTime, author);
     }
 
 
