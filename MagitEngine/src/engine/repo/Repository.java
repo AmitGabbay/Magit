@@ -4,6 +4,7 @@ import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -169,9 +170,8 @@ public class Repository {
         else // todo verify to build currentCommitDatabases on repo loading from xml
             anyChanges = fileUtils.createWcDatabases();
 
-        // If any changes waiting, set the "OK Switch" for new commit
-        if (anyChanges)
-            this.pendingChangesWaiting = true;
+        //set the "OK Switch" according to the the changes check result
+        this.pendingChangesWaiting = anyChanges;
 
         return anyChanges;
     }
@@ -273,7 +273,7 @@ public class Repository {
     private void createCurrentCommitDatabases_Rec(MagitObject object, String objectPath) {
 
         if (object instanceof MagitFolder) {
-            Collection<MagitObjMetadata> magitFolderContents = ((MagitFolder) object).getObjectsValues();
+            Collection<MagitObjMetadata> magitFolderContents = ((MagitFolder) object).getFolderObjects();
             for (MagitObjMetadata currentObjectData : magitFolderContents) {
                 String currentObjectPath = objectPath.concat("\\" + currentObjectData.getName());
                 MagitObject currentObject = repoObjects.get(currentObjectData.getSha1()); //get object from the repo objects map
@@ -302,7 +302,7 @@ public class Repository {
     private void getCurrentCommitObjectsData_Rec(StringBuilder commitObjectsData, MagitFolder parentFolder,
                                                  String path, int treeLevel) {
 
-        Collection<MagitObjMetadata> magitFolderContents = parentFolder.getObjectsValues();
+        Collection<MagitObjMetadata> magitFolderContents = parentFolder.getFolderObjects();
         for (MagitObjMetadata currentObjectData : magitFolderContents) {
 
             String currentObjectPath = path.concat("\\" + currentObjectData.getName());
@@ -364,10 +364,15 @@ public class Repository {
 
     public void checkout(Branch branchToCheckout) throws IOException {
 
-        setActiveBranch(branchToCheckout);
-        //todo work from here
-        //branches.remove(branchName);
-        //fileUtils.deleteBranchFromDisk(branchName);
+        //If the branch to change to is on the same commit, we don't need to change any WC databases or files
+        if (commits.get(branchToCheckout.getPointedCommit())==(getCurrentCommit()))
+            setActiveBranch(branchToCheckout);
+
+        else {
+            fileUtils.checkoutOnDisk(branchToCheckout);
+            setActiveBranch(branchToCheckout);
+            createCurrentCommitDatabases();
+        }
     }
 
     public Branch getBranch(String branchName) {
@@ -706,6 +711,46 @@ public class Repository {
             Files.delete(branchToDeletePath);
         }
 
+        private void cleanWcOnDisk() throws IOException {
+            File repoFolder = new File(repoPath.toString());
+            File[] filesList = repoFolder.listFiles();
+            if (filesList == null)
+                throw new IOException("Bad repo path");
+
+            for (File file : filesList) {
+                if (!file.getName().equals(".magit"))
+                    FileUtils.forceDelete(file);
+            }
+        }
+
+        private void checkoutOnDisk(Branch branchToCheckout) throws IOException {
+
+            cleanWcOnDisk();
+
+            Commit commitToCheckout = commits.get(branchToCheckout.getPointedCommit());
+            String repoRootSha1 = commitToCheckout.getRootFolderSha1();
+            MagitFolder repoRoot = (MagitFolder) repoObjects.get(repoRootSha1);
+            Path repoRootPath = fileUtils.getRepoPath();
+
+            checkoutOnDisk_Rec(repoRoot, repoRootPath);
+        }
+
+        private void checkoutOnDisk_Rec(MagitFolder folder, Path folderPath) throws IOException {
+
+            Collection<MagitObjMetadata> magitFolderContents = folder.getFolderObjects();
+            for (MagitObjMetadata currentObjectData : magitFolderContents) {
+                Path currentObjectPath = folderPath.resolve(currentObjectData.getName());
+                MagitObject currentObject = repoObjects.get(currentObjectData.getSha1()); //get object from the repo objects map
+
+                if (currentObject instanceof MagitFolder) {
+                    Files.createDirectory(currentObjectPath);
+                    checkoutOnDisk_Rec((MagitFolder) currentObject, currentObjectPath);
+                } else { //Object is a blob
+                    File blobFile = new File(currentObjectPath.toString());
+                    FileUtils.writeStringToFile(blobFile, ((Blob) currentObject).getContent(), StandardCharsets.UTF_8);
+                }
+            }
+        }
 
     } //RepoFileUtils Class end
 

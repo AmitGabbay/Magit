@@ -12,6 +12,10 @@ public class Blob extends MagitObject {
 
     private String content;
 
+    public String getContent() {
+        return content;
+    }
+
     public Blob(File file) throws IOException {
         content = FileUtils.readFileToString(file, "UTF-8");
     }

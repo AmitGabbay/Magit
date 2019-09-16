@@ -291,31 +291,43 @@ public class Magit {
         try {
             String branchToCheckoutName = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
             Branch branchToCheckout = repo.getBranch(branchToCheckoutName);
-            if (branchToCheckout == null){
-                System.out.println("No such branch found... Please try again with another branch name.");
+
+            if (branchToCheckout==null || branchToCheckout==repo.getActiveBranch()) {
+                if (branchToCheckout == null)
+                    System.out.println("No such branch found... Please try again with another branch name.");
+                else // (branchToCheckout == repo.getActiveBranch())
+                    System.out.println("Cannot change to the active branch! Please try again with another branch.");
+
                 return;
             }
-            if (branchToCheckout == repo.getActiveBranch()) {
-                System.out.println("Cannot change to the active branch! Please try again with another branch.");
-                return;
+            //uncommitted changes protection mechanism
+            repo.checkForWcPendingChanges();
+            if (repo.isPendingChangesWaiting()) {
+                if(!continueCheckoutWarning()) {
+                    System.out.println("Operation canceled. Please commit before the next try...");
+                    return;
+                }
             }
 
             repo.checkout(branchToCheckout);
-//            System.out.println("The branch " + branchToCheckoutName + " was deleted successfully.");
+            System.out.println("Operation completed. You are now working on branch " + branchToCheckoutName +".");
 
         } catch (Exception e) {
             handleGenericException(e);
         }
     }
 
-
-
-
-
-
-
-
-
+    /**
+     * @return True if the user wish to continue despite the warning, False otherwise
+     */
+    private boolean continueCheckoutWarning(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("There are pending changes since last commit. If you continue checkout you will " +
+                "lose all those uncommitted changes.\nType 'y' if you to wish continue anyway, or any another " +
+                "input to cancel and get back to main menu and make a commit:");
+        String userInput=scanner.nextLine();
+        return (userInput.equalsIgnoreCase("y"));
+    }
 
 
     public boolean isRepoDefined() {

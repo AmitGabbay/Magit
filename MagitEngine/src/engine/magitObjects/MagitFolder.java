@@ -38,7 +38,7 @@ public class MagitFolder extends MagitObject {
         }
     }
 
-    public Collection<MagitObjMetadata> getObjectsValues() {
+    public Collection<MagitObjMetadata> getFolderObjects() {
         return objects.values();
     }
 
