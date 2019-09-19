@@ -1,5 +1,5 @@
 
-package xmlClasses;
+package engine.xml.generated;
 
 import java.util.ArrayList;
 import java.util.List;
