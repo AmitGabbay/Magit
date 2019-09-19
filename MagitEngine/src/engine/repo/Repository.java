@@ -345,7 +345,6 @@ public class Repository {
         fileUtils.deleteBranchFromDisk(branchToDelete.getName());
     }
 
-    //todo how to stop on the branch's first commit?
     public String getActiveBranchCommitsInfo() {
 
         StringBuilder commitsInfo = new StringBuilder();
