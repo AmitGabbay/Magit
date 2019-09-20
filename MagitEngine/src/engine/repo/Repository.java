@@ -109,7 +109,7 @@ public class Repository {
         return repoObjects;
     }
 
-    public Collection<MagitObject> getObjectsTxtAsCollection() {
+    public Collection<MagitObject> getObjectsAsCollection() {
         return repoObjects.values();
     }
 
@@ -132,6 +132,12 @@ public class Repository {
     public Branch getActiveBranch() {
         return branches.get(settings.getHeadBranch().toLowerCase());
     }
+
+
+    public void writeMagitObjectToDisk(MagitObject object) throws IOException {
+        this.fileUtils.writeObjectToDisk(object);
+    }
+
 
     /**
      * Note: This is note a full checkout method, just HEAD branch changer!
@@ -237,7 +243,7 @@ public class Repository {
         fileUtils.writeBranchToDisk(activeBranch);
     }
 
-    private void addNewCommitToRepo(Commit newCommit) throws IOException {
+    public void addNewCommitToRepo(Commit newCommit) throws IOException {
         commits.put(newCommit.calcSha1(), newCommit); //add to the repo commit's map
         fileUtils.writeObjectToDisk(newCommit); //write the commit on disk
     }

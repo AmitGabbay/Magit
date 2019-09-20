@@ -17,10 +17,7 @@ import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.*;
 import engine.repo.RepoSettings;
 import engine.repo.Repository;
-import engine.xml.generated.Item;
-import engine.xml.generated.MagitBlob;
-import engine.xml.generated.MagitRepository;
-import engine.xml.generated.MagitSingleFolder;
+import engine.xml.generated.*;
 import org.apache.commons.io.FileUtils;
 
 public class XmlRepoImporter {
@@ -30,6 +27,8 @@ public class XmlRepoImporter {
     private Repository repo;
     private Map<String, MagitObjMetadata> blobsData; //<ImportedBlobID, createdMeteData>
     private Map<String, MagitObjMetadata> foldersData; //<ImportedFolderID, createdMeteData>
+    private Map<String, String> rootFoldersIDtoSha1; //<rootFolderID, folderSha1>
+    private Map<String, String> commitsIDtoSha1; //<commitID, commitSha1>
 
 
     public XmlRepoImporter(File xmlFile) throws IOException {
@@ -40,8 +39,11 @@ public class XmlRepoImporter {
         } catch (JAXBException e) { //todo remove later or specify error
             e.printStackTrace();
         }
+
         blobsData = new HashMap<>();
         foldersData = new HashMap<>();
+        rootFoldersIDtoSha1 = new HashMap<>();
+        commitsIDtoSha1 = new HashMap<>();
     }
 
     private static MagitRepository deserializeFrom(InputStream in) throws JAXBException {
@@ -50,9 +52,6 @@ public class XmlRepoImporter {
         return (MagitRepository) u.unmarshal(in);
     }
 
-//    boolean isRepoAlreadyExistsOnLocation(){
-//        return MagitFileUtils.isExistingRepoPath(generatedRepo.getLocation());
-//    }
 
     public String getDesignatedPath() {
         return repoData.getLocation();
@@ -70,9 +69,14 @@ public class XmlRepoImporter {
         MagitFileUtils.createRepoFoldersOnDisk(repo.getSettings(), Files.exists(designatedPath));
 
         loadBlobs();
+        loadFolders();
+        //Write blobs and folders to disk
+        for (MagitObject object : repo.getObjectsAsCollection())
+            repo.writeMagitObjectToDisk(object);
 
-        //write all to the disk
+        loadCommits();
         //after all - set active branch - to create the necessary files
+        //create current commit dataBases
         return repo;
     }
 
@@ -100,21 +104,17 @@ public class XmlRepoImporter {
             if (this.foldersData.containsKey(folderData.getId())) //The folder was created already
                 continue;
 
-            //create blob and add it to the repo
-            MagitFolder rootFolder = new MagitFolder();
+            //create magitFolder, fill it's contents and add it to the repo
+            MagitFolder folder = new MagitFolder();
+            fillFolderContent_Rec(folder, folderData);
+            repo.addMagitObjectToRepo(folder);
 
-            //todo recursive
-
-            repo.addMagitObjectToRepo(rootFolder);
             //create it's metadata and add to an internal Importer map
-            if (this.foldersData.containsKey(folderData.getId()))
-                throw new Exception("folder #" + folderData.getId() + " has itself as an item!");
-            MagitObjMetadata folderMetadata = new MagitObjMetadata(folderData, rootFolder.calcSha1());
-            this.foldersData.put(folderData.getId(), folderMetadata);
+            createMetadataAndPutToImporterMaps(folderData, folder.calcSha1());
         }
     }
 
-    private void FillFolderContent_Rec(MagitFolder parentFolder, MagitSingleFolder parentFolderData) throws Exception {
+    private void fillFolderContent_Rec(MagitFolder parentFolder, MagitSingleFolder parentFolderData) throws Exception {
 
         List<Item> parentFolderItems = parentFolderData.getItems().getItem();
         for (Item item : parentFolderItems) {
@@ -128,40 +128,140 @@ public class XmlRepoImporter {
                     currentFolderMetadata = foldersData.get(itemID);
 
                 else {
+                    //create magitFolder, fill it's contents and add it to the repo
                     MagitFolder currentFolder = new MagitFolder();
-                    MagitSingleFolder currentFolderData;//=todo write locator for the folder obj
-                    //todo recursive
+                    MagitSingleFolder currentFolderData = findFolderDataByID(itemID);
+                    fillFolderContent_Rec(currentFolder, currentFolderData);
                     repo.addMagitObjectToRepo(currentFolder);
                     //create it's metadata and add to an internal Importer map
-                    if (this.foldersData.containsKey(itemID))
-                        throw new Exception("folder #" + itemID + " has itself as an item!");
-                    currentFolderMetadata = new MagitObjMetadata(currentFolderData, currentFolder.calcSha1());
-                    this.foldersData.put(itemID, currentFolderMetadata);
+                    currentFolderMetadata = createMetadataAndPutToImporterMaps(currentFolderData, currentFolder.calcSha1());
                 }
 
                 parentFolder.addObjectData(currentFolderMetadata);
 
             } else { //item is blob
+
                 if (blobsData.containsKey(itemID)) {
                     MagitObjMetadata currentBlobMetadata = blobsData.get(itemID);
                     parentFolder.addObjectData(currentBlobMetadata);
                 } else
                     throw new Exception("Cannot find blob id #" + itemID + "!");
             }
-
         }
     }
 
+    private MagitSingleFolder findFolderDataByID(String folderID) throws Exception {
+        List<MagitSingleFolder> foldersList = repoData.getMagitFolders().getMagitSingleFolder();
+        MagitSingleFolder folderData = foldersList.stream()
+                .filter(f -> f.getId().equals(folderID))
+                .findFirst().orElseThrow(() -> new Exception("Cannot find folder id #" + folderID + "!"));
 
-    //    public  void loadXML(File xmlFile) throws IOException {
-//
-//        InputStream inputStream = FileUtils.openInputStream(xmlFile);
-//        try {
-//           this.generatedRepo = deserializeFrom(inputStream);
-//            //System.out.println("aaa");
-//        } catch (JAXBException e) { //todo remove later or specify error
-//            e.printStackTrace();
-//        }
-//    }
+        return folderData;
+    }
 
-}
+    private MagitSingleCommit findCommitDataByID(String commitID) throws Exception {
+        List<MagitSingleCommit> commitsList = repoData.getMagitCommits().getMagitSingleCommit();
+        MagitSingleCommit commitData = commitsList.stream()
+                .filter(c -> c.getId().equals(commitID))
+                .findFirst().orElseThrow(() -> new Exception("Cannot find commit id #" + commitID + "!"));
+
+        return commitData;
+    }
+
+
+    private MagitObjMetadata createMetadataAndPutToImporterMaps(MagitSingleFolder folderData, String folderSha1) throws Exception {
+        String folderID = folderData.getId();
+        if (this.foldersData.containsKey(folderID))
+            throw new Exception("folder #" + folderID + " has itself as an item!");
+        MagitObjMetadata folderMetadata = new MagitObjMetadata(folderData, folderSha1);
+        this.foldersData.put(folderID, folderMetadata);
+
+        if (folderData.isIsRoot())
+            rootFoldersIDtoSha1.put(folderID, folderSha1);
+
+        return folderMetadata;
+    }
+
+
+    private void loadCommits() throws Exception {
+
+        List<MagitSingleCommit> commitsList = repoData.getMagitCommits().getMagitSingleCommit();
+        for (MagitSingleCommit commitData : commitsList) {
+
+            if (this.commitsIDtoSha1.containsKey(commitData.getId())) //The commit was already already
+                continue;
+
+            loadCommits_Rec(commitData);
+        }
+    }
+
+    private void loadCommits_Rec(MagitSingleCommit commitData) throws Exception {
+
+        //verify all preceding commit already loaded (we need to have their sha1). if not, load them first.
+        final List<PrecedingCommits.PrecedingCommit> precedingCommits = commitData.getPrecedingCommits().getPrecedingCommit();
+        if (!precedingCommits.isEmpty()) {
+            for (PrecedingCommits.PrecedingCommit precedingCommit : precedingCommits) {
+                //prevent infinite loop
+                if (precedingCommit.getId().equals(commitData.getId()))
+                    throw new Exception("Commit ID #" + commitData.getId() + " Points to itself!");
+
+                if (!this.commitsIDtoSha1.containsKey(precedingCommit.getId())) {
+                    MagitSingleCommit precedingCommitData = findCommitDataByID(precedingCommit.getId());
+                    loadCommits_Rec(precedingCommitData);
+                }
+            }
+        }
+        createNewCommit(commitData);
+    }
+
+    private void createNewCommit(MagitSingleCommit commitData) throws Exception {
+        //Gather the new commit metadata
+
+        String creationTime = commitData.getDateOfCreation();
+        String author = commitData.getAuthor();
+        String message = commitData.getMessage();
+
+        String parentCommitSha1 = getRootFolderSha1(commitData);
+        //String anotherParentCommitID = commitData.getPrecedingCommits().getPrecedingCommit().get(1).getId();
+        //String anotherParentCommitSha1 = commitsIDtoSha1.get(anotherParentCommitID);
+        String rootFolderSha1 = getCommitRootFolderSha1(commitData);
+
+        Commit commit = new Commit(rootFolderSha1, parentCommitSha1, message, creationTime, author);
+        this.repo.addNewCommitToRepo(commit); //This method includes writing the commit to disk
+        this.commitsIDtoSha1.put(commitData.getId(), commit.calcSha1());
+    }
+
+    private String getRootFolderSha1(MagitSingleCommit commitData)
+    {
+        //parentCommitSha1 should be exist because of the recursive commits loading, or null if the commit has no parents
+        String parentCommitSha1 = null;
+        final List<PrecedingCommits.PrecedingCommit> precedingCommits = commitData.getPrecedingCommits().getPrecedingCommit();
+        if (!precedingCommits.isEmpty()) {
+            String parentCommitID = precedingCommits.get(0).getId();
+            parentCommitSha1 = commitsIDtoSha1.get(parentCommitID);
+        }
+        return parentCommitSha1;
+    }
+
+    private String getCommitRootFolderSha1(MagitSingleCommit commitData) throws Exception {
+
+        String rootFolderID = commitData.getRootFolder().getId();
+        String rootFolderSha1 = rootFoldersIDtoSha1.get(rootFolderID);
+        if (rootFolderSha1 == null) {
+            String exceptionMsg;
+            if (foldersData.containsKey(rootFolderID)) {
+                exceptionMsg = "Commit ID #" + commitData.getId() + "is pointing to non-root folder #"
+                        + rootFolderID + "!";
+            } else {
+                exceptionMsg = "Commit ID #" + commitData.getId() + "is pointing to invalid folder #"
+                        + rootFolderID + "!";
+            }
+            throw new Exception(exceptionMsg);
+        }
+        return rootFolderSha1;
+    }
+
+
+
+
+} //class end
