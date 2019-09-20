@@ -5,13 +5,12 @@ import engine.repo.Repository;
 import engine.magitObjects.Commit;
 import engine.magitObjects.MagitObject;
 import engine.fileMangers.MagitFileUtils;
+import engine.xml.XmlRepoImporter;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -19,10 +18,9 @@ import java.util.function.Predicate;
 
 public class Magit {
 
-    private Repository repo = null;
-
     private final String tryAgainNonEmptyOrSpacesInEdges = "Please enter a non-empty input which doesn't starts or " +
             "ends with a space.";
+    private Repository repo = null;
     private Predicate<String> nonEmptyAndNoSpacesInEdgesString = v -> !(v.isEmpty() || v.startsWith(" ") || v.endsWith(" "));
 
     private static void printNoDefinedRepoMsg() {
@@ -82,6 +80,45 @@ public class Magit {
     }
 
 
+    public void loadRepoFromXml() {
+
+        String inputMsg = "Please enter the location of the xml file: ";
+        String tryAgainMsg = this.tryAgainNonEmptyOrSpacesInEdges;
+        String xmlFilePath = getValidUserString(inputMsg, tryAgainMsg, this.nonEmptyAndNoSpacesInEdgesString);
+        File xmlFile = new File(xmlFilePath);
+
+        try {
+            if (!xmlFile.exists() || xmlFile.isDirectory()) {
+                System.out.println("Invalid path. Please specify a valid path for the xml file and try again...");
+                return;
+            }
+
+            //Designated repo location check
+            XmlRepoImporter importer = new XmlRepoImporter(xmlFile);
+            String designatedPath = importer.getDesignatedPath();
+            File designatedPathFile = new File(designatedPath);
+
+            if (MagitFileUtils.isExistingRepoPath(designatedPath)) {
+                if (!askUserToOverrideExistingRepoFiles()) {
+                    System.out.println("Operation canceled.");
+                    return;
+                }
+            } else if (designatedPathFile.exists() && designatedPathFile.list().length > 0) {
+                System.out.println("There are existing non-repository files in the location specified " +
+                        "in the given xml. Operation canceled.");
+                return;
+            }
+
+            this.repo = importer.createRepoFromXml();
+            System.out.println("The repository " + repo.getName() + " has loaded successfully!\n");
+
+
+        } catch (Exception e) {
+            handleGenericException(e);
+        }
+    }
+
+
     public void openRepoFromDisk() {
 
         String inputMsg = "Please enter the location of your your existing repository: ";
@@ -119,7 +156,7 @@ public class Magit {
         }
     }
 
-    public void showCurrentCommitObjects(){
+    public void showCurrentCommitObjects() {
 
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
@@ -188,7 +225,7 @@ public class Magit {
         }
     }
 
-    public void createNewBranch(){
+    public void createNewBranch() {
 
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
@@ -214,13 +251,12 @@ public class Magit {
             repo.addNewBranchToRepo(newBranch);
             System.out.println("The branch " + newBranchName + " created successfully!");
 
-            } catch (Exception e) {
+        } catch (Exception e) {
             handleGenericException(e);
         }
     }
 
-    public void showAllBranches()
-    {
+    public void showAllBranches() {
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
             return;
@@ -235,7 +271,7 @@ public class Magit {
         }
     }
 
-    public void deleteBranch(){
+    public void deleteBranch() {
 
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
@@ -247,11 +283,11 @@ public class Magit {
         try {
             String branchToDeleteName = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
             Branch branchToDelete = repo.getBranch(branchToDeleteName);
-            if (branchToDelete==null){
+            if (branchToDelete == null) {
                 System.out.println("No such branch found... Please try again with another branch name.");
                 return;
             }
-            if (branchToDelete==repo.getActiveBranch()){
+            if (branchToDelete == repo.getActiveBranch()) {
                 System.out.println("Cannot delete the active branch! Please checkout to another branch and try again");
                 return;
             }
@@ -264,14 +300,14 @@ public class Magit {
         }
     }
 
-    public void showActiveBranchCommitHistory(){
+    public void showActiveBranchCommitHistory() {
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
             return;
         }
 
         try {
-            System.out.println("Showing Commit history for the active branch " + repo.getActiveBranchName()+ ":\n");
+            System.out.println("Showing Commit history for the active branch " + repo.getActiveBranchName() + ":\n");
             System.out.println(repo.getActiveBranchCommitsInfo());
 
         } catch (Exception e) {
@@ -279,7 +315,7 @@ public class Magit {
         }
     }
 
-    public void checkout(){
+    public void checkout() {
 
         if (!isRepoDefined()) {
             printNoDefinedRepoMsg();
@@ -292,7 +328,7 @@ public class Magit {
             String branchToCheckoutName = getValidUserString(inputMsg, tryAgainMsg, v -> !(v.isEmpty()));
             Branch branchToCheckout = repo.getBranch(branchToCheckoutName);
 
-            if (branchToCheckout==null || branchToCheckout==repo.getActiveBranch()) {
+            if (branchToCheckout == null || branchToCheckout == repo.getActiveBranch()) {
                 if (branchToCheckout == null)
                     System.out.println("No such branch found... Please try again with another branch name.");
                 else // (branchToCheckout == repo.getActiveBranch())
@@ -303,14 +339,14 @@ public class Magit {
             //uncommitted changes protection mechanism
             repo.checkForWcPendingChanges();
             if (repo.isPendingChangesWaiting()) {
-                if(!continueCheckoutWarning()) {
+                if (!askUserToContinueCheckout()) {
                     System.out.println("Operation canceled. Please commit before the next try...");
                     return;
                 }
             }
 
             repo.checkout(branchToCheckout);
-            System.out.println("Operation completed. You are now working on branch " + branchToCheckoutName +".");
+            System.out.println("Operation completed. You are now working on branch " + branchToCheckoutName + ".");
 
         } catch (Exception e) {
             handleGenericException(e);
@@ -320,12 +356,25 @@ public class Magit {
     /**
      * @return True if the user wish to continue despite the warning, False otherwise
      */
-    private boolean continueCheckoutWarning(){
+    private boolean askUserToContinueCheckout() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("There are pending changes since last commit. If you continue checkout you will " +
                 "lose all those uncommitted changes.\nType 'y' if you to wish continue anyway, or any another " +
                 "input to cancel and get back to main menu and make a commit:");
-        String userInput=scanner.nextLine();
+        String userInput = scanner.nextLine();
+        return (userInput.equalsIgnoreCase("y"));
+    }
+
+
+    /**
+     * @return True if the user wish to continue despite the warning, False otherwise
+     */
+    private boolean askUserToOverrideExistingRepoFiles() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("There is an existing repository in the location specified in the given xml, would you " +
+                "like to override it? It's files will be lost. \nType 'y' if you to wish continue anyway, or any another " +
+                "input to cancel and get back to main menu");
+        String userInput = scanner.nextLine();
         return (userInput.equalsIgnoreCase("y"));
     }
 
@@ -337,7 +386,7 @@ public class Magit {
     public void printCurrentRepoDetails() {
         System.out.print("Working on the Repository: ");
         if (isRepoDefined()) {
-            System.out.print(repo.getName() + "\t");
+            System.out.print(repo.getName() + " \t");
             System.out.println("Located in: " + repo.getStringPath());
             System.out.println("Current user: " + repo.getActiveUser());
             System.out.println();

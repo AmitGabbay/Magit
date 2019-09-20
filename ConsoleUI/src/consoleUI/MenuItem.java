@@ -15,10 +15,10 @@ public enum MenuItem {
     NEW_BRANCH(9, "Create a new branch"),
     DELETE_BRANCH(10, "Delete an existing branch"),
     CHECKOUT(11, "Checkout (select branch)"),
-    SHOW_COMMIT_HISTORY(12, "Show active branch commits history"),
-    TEST_GENERAL(666, "TEST - GENERAL"),
-    TEST_GENERAL2(667, "TEST - GENERAL2"),
-    PRINT_OBJECTS_TEST(777,"Test: print objects");
+    SHOW_COMMIT_HISTORY(12, "Show active branch commits history");
+//    TEST_GENERAL(666, "TEST - GENERAL"),
+//    TEST_GENERAL2(667, "TEST - GENERAL2"),
+//    PRINT_OBJECTS_TEST(777,"Test: print objects");
 
 
     public static final int EXIT_OPER_CODE = values().length + 1;

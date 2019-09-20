@@ -12,13 +12,21 @@ public class Blob extends MagitObject {
 
     private String content;
 
+    //from xml
+    public Blob(String content) {
+        this.content = content;
+    }
+
+    //from a file
+    public Blob(File file) throws IOException {
+        content = FileUtils.readFileToString(file, "UTF-8");
+    }
+
     public String getContent() {
         return content;
     }
 
-    public Blob(File file) throws IOException {
-        content = FileUtils.readFileToString(file, "UTF-8");
-    }
+
 
 //    public Blob(File file) {
 //

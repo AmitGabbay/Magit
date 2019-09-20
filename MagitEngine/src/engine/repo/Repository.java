@@ -58,9 +58,9 @@ public class Repository {
      */
     public static Repository newRepoFromScratchCreator(String newRepoName, String requestedPath) throws Exception {
 
-        RepoSettings settings = new RepoSettings(newRepoName, requestedPath);
+        RepoSettings settings = new RepoSettings(newRepoName, requestedPath, "master");
         Repository newRepo = new Repository(settings);
-        MagitFileUtils.createNewRepoFoldersOnDisk(newRepo.getSettings());
+        MagitFileUtils.createRepoFoldersOnDisk(newRepo.getSettings(), false);
 
         Branch master = Branch.createBlankMasterBranch();
         newRepo.addNewBranchToRepo(master);
@@ -244,6 +244,10 @@ public class Repository {
 
     public boolean isBranchNameExists(String name) {
         return branches.containsKey(name.toLowerCase()); //lower case to support case insensitive
+    }
+
+    public void addMagitObjectToRepo(MagitObject object){
+        repoObjects.put(object.calcSha1(), object);
     }
 
     public void addNewBranchToRepo(Branch newBranch) throws Exception {

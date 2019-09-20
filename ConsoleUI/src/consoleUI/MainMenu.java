@@ -77,16 +77,12 @@ public class MainMenu {
                 magit.createNewRepoFromScratch();
                 break;
 
+            case OPEN_FROM_XML:
+                magit.loadRepoFromXml();
+                break;
+
             case OPEN_FROM_DISK:
                 magit.openRepoFromDisk();
-                break;
-
-            case SHOW_STATUS:
-                magit.checkWcStatus();
-                break;
-
-            case COMMIT:
-                magit.commit();
                 break;
 
             case CHANGE_USERNAME:
@@ -95,6 +91,14 @@ public class MainMenu {
 
             case SHOW_CURRENT_COMMIT:
                 magit.showCurrentCommitObjects();
+                break;
+
+            case SHOW_STATUS:
+                magit.checkWcStatus();
+                break;
+
+            case COMMIT:
+                magit.commit();
                 break;
 
             case SHOW_BRANCHES:
@@ -117,21 +121,17 @@ public class MainMenu {
                 magit.checkout();
                 break;
 
-            case OPEN_FROM_XML:
-                magit.inDevProgress();
-                break;
-
-            case TEST_GENERAL:
-                magit.my666();
-                break;
-
-            case TEST_GENERAL2:
-                magit.my667();
-                break;
-
-            case PRINT_OBJECTS_TEST:
-                magit.printObject_TEST();
-                break;
+//            case TEST_GENERAL:
+//                magit.my666();
+//                break;
+//
+//            case TEST_GENERAL2:
+//                magit.my667();
+//                break;
+//
+//            case PRINT_OBJECTS_TEST:
+//                magit.printObject_TEST();
+//                break;
         }
     }
 

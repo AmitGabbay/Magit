@@ -1,6 +1,7 @@
 package engine.fileMangers;
 
 import engine.repo.RepoSettings;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.nio.file.*;
@@ -36,18 +37,23 @@ public class MagitFileUtils {
     /**
      * Should Be used only after path validation using the CreateNewRepoOnDisk_PathValidation() method!
      * HEAD and RepoSettings Files won't be created in this method, but in the master branch creation.
-     * @param newRepoSettings
+     * @param repoSettings
+     * @param overrideFolder
      * @throws IOException
      */
-    public static void createNewRepoFoldersOnDisk(RepoSettings newRepoSettings) throws IOException {
+    public static void createRepoFoldersOnDisk(RepoSettings repoSettings, boolean overrideFolder) throws IOException {
 
-        Path newRepoPath = Paths.get(newRepoSettings.getStringPath());
-        Path magitPath = newRepoPath.resolve(".magit");
+        String repoStringPath = repoSettings.getStringPath();
+        Path repoPath = Paths.get(repoStringPath);
+        Path magitPath = repoPath.resolve(".magit");
 
-        //create the new repository directory and the internal magit folders structure
-        Files.createDirectory(newRepoPath);
+        //create the repository directory (if needed, else clean its content) and the internal magit folders structure
+        if (overrideFolder)
+            FileUtils.cleanDirectory(new File(repoStringPath));
+        else
+        Files.createDirectories(repoPath); //create all non-existing folders in the path
+
         Files.createDirectory(magitPath);
-        //System.out.println(magitPath.toString()); //test
         Files.createDirectory(magitPath.resolve("objects"));
         Files.createDirectory(magitPath.resolve("branches"));
     }
@@ -75,6 +81,7 @@ public class MagitFileUtils {
         return settings;
     }
 
+    //public static void
 
     /*
      ********************* test only section!!!*********************************
