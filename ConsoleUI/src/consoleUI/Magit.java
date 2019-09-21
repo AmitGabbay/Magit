@@ -83,13 +83,14 @@ public class Magit {
     public void loadRepoFromXml() {
 
         String inputMsg = "Please enter the location of the xml file: ";
-        String tryAgainMsg = this.tryAgainNonEmptyOrSpacesInEdges;
-        String xmlFilePath = getValidUserString(inputMsg, tryAgainMsg, this.nonEmptyAndNoSpacesInEdgesString);
+        String tryAgainMsg =  "Please enter a valid xml file path.";
+        Predicate<String> xmlFileReqs = f-> nonEmptyAndNoSpacesInEdgesString.test(f) && f.endsWith(".xml");
+        String xmlFilePath = getValidUserString(inputMsg, tryAgainMsg, xmlFileReqs);
         File xmlFile = new File(xmlFilePath);
 
         try {
             if (!xmlFile.exists() || xmlFile.isDirectory()) {
-                System.out.println("Invalid path. Please specify a valid path for the xml file and try again...");
+                System.out.println("File not found. Please specify a valid path for the xml file and try again...");
                 return;
             }
 
@@ -246,7 +247,7 @@ public class Magit {
                 return;
             }
 
-            String pointedCommitSha1 = repo.getActiveBranch().getPointedCommit();
+            String pointedCommitSha1 = repo.getActiveBranch().getPointedCommitSha1();
             Branch newBranch = new Branch(newBranchName, pointedCommitSha1);
             repo.addNewBranchToRepo(newBranch);
             System.out.println("The branch " + newBranchName + " created successfully!");

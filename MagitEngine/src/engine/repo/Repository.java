@@ -37,7 +37,6 @@ public class Repository {
     private String activeUser = "Administrator";
     private RepoFileUtils fileUtils;
 
-
     public Repository(RepoSettings settings) {
         this.settings = settings;
         this.branches = new HashMap<>();
@@ -80,6 +79,10 @@ public class Repository {
         return repo;
     }
 
+
+    public RepoFileUtils useFileUtils() {
+        return fileUtils;
+    }
 
     public WC_PendingChangesData getWcPendingChanges() {
         return wcPendingChanges;
@@ -134,13 +137,8 @@ public class Repository {
     }
 
 
-    public void writeMagitObjectToDisk(MagitObject object) throws IOException {
-        this.fileUtils.writeObjectToDisk(object);
-    }
-
-
     /**
-     * Note: This is note a full checkout method, just HEAD branch changer!
+     * Note: This is not a full checkout method, just HEAD branch changer!
      *
      * @param branch Branch to set as active (the HEAD branch)
      */
@@ -158,7 +156,7 @@ public class Repository {
             return null;
 
         Branch activeBranch = getActiveBranch();
-        return commits.get(activeBranch.getPointedCommit());
+        return commits.get(activeBranch.getPointedCommitSha1());
     }
 
     public boolean checkForWcPendingChanges() throws IOException {
@@ -335,7 +333,7 @@ public class Repository {
         String headBranchName = getActiveBranch().getName();
 
         for (Branch b : branches.values()) {
-            Commit pointedCommit = commits.get(b.getPointedCommit());
+            Commit pointedCommit = commits.get(b.getPointedCommitSha1());
             String commitDescription = pointedCommit.getDescription();
 
             allBranchesInfo.append(b);
@@ -374,7 +372,7 @@ public class Repository {
     public void checkout(Branch branchToCheckout) throws IOException {
 
         //If the branch to change to is on the same commit, we don't need to change any WC databases or files
-        if (commits.get(branchToCheckout.getPointedCommit())==(getCurrentCommit()))
+        if (commits.get(branchToCheckout.getPointedCommitSha1())==(getCurrentCommit()))
             setActiveBranch(branchToCheckout);
 
         else {
@@ -415,7 +413,7 @@ public class Repository {
 //    }
 
 
-    private class RepoFileUtils {
+    public class RepoFileUtils {
 
         private final Path repoPath;
         private final Path magitPath;
@@ -616,7 +614,7 @@ public class Repository {
             objParentFolder.addObjectData(objMetadata);
         }
 
-        private void writeObjectToDisk(Sha1Able object) throws IOException {
+        public void writeObjectToDisk(Sha1Able object) throws IOException {
 
             Path pathToWrite = objectsPath.resolve(object.calcSha1());
 
@@ -638,12 +636,12 @@ public class Repository {
                     new OutputStreamWriter(
                             new FileOutputStream(pathToWrite.toString()), StandardCharsets.UTF_8))) {
 
-                out.write(branch.getPointedCommit());
+                out.write(branch.getPointedCommitSha1());
             }
         }
 
         //Creates Head and RepoSettings files, or overrides them
-        private void updateHeadBranchOnDisk(Branch newHeadBranch) throws IOException {
+        public void updateHeadBranchOnDisk(Branch newHeadBranch) throws IOException {
 
             //Write the HEAD file (a string defining the head branch name) on disk
             final Path HeadFilePath = branchesPath.resolve("HEAD");
@@ -732,11 +730,11 @@ public class Repository {
             }
         }
 
-        private void checkoutOnDisk(Branch branchToCheckout) throws IOException {
+        public void checkoutOnDisk(Branch branchToCheckout) throws IOException {
 
             cleanWcOnDisk();
 
-            Commit commitToCheckout = commits.get(branchToCheckout.getPointedCommit());
+            Commit commitToCheckout = commits.get(branchToCheckout.getPointedCommitSha1());
             String repoRootSha1 = commitToCheckout.getRootFolderSha1();
             MagitFolder repoRoot = (MagitFolder) repoObjects.get(repoRootSha1);
             Path repoRootPath = fileUtils.getRepoPath();

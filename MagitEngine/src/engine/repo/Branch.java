@@ -57,7 +57,7 @@ public class Branch {
         return name;
     }
 
-    public String getPointedCommit() {
+    public String getPointedCommitSha1() {
         return pointedCommit;
     }
 

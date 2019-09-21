@@ -1,5 +1,13 @@
 package engine.xml;
 
+import engine.fileMangers.MagitFileUtils;
+import engine.magitObjects.*;
+import engine.repo.Branch;
+import engine.repo.RepoSettings;
+import engine.repo.Repository;
+import engine.xml.generated.*;
+import org.apache.commons.io.FileUtils;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -9,16 +17,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import engine.fileMangers.MagitFileUtils;
-import engine.magitObjects.*;
-import engine.repo.RepoSettings;
-import engine.repo.Repository;
-import engine.xml.generated.*;
-import org.apache.commons.io.FileUtils;
+import java.util.*;
 
 public class XmlRepoImporter {
 
@@ -31,14 +30,10 @@ public class XmlRepoImporter {
     private Map<String, String> commitsIDtoSha1; //<commitID, commitSha1>
 
 
-    public XmlRepoImporter(File xmlFile) throws IOException {
+    public XmlRepoImporter(File xmlFile) throws IOException, JAXBException {
 
         InputStream inputStream = FileUtils.openInputStream(xmlFile);
-        try {
-            this.repoData = deserializeFrom(inputStream);
-        } catch (JAXBException e) { //todo remove later or specify error
-            e.printStackTrace();
-        }
+        this.repoData = deserializeFrom(inputStream);
 
         blobsData = new HashMap<>();
         foldersData = new HashMap<>();
@@ -52,14 +47,13 @@ public class XmlRepoImporter {
         return (MagitRepository) u.unmarshal(in);
     }
 
-
     public String getDesignatedPath() {
         return repoData.getLocation();
     }
 
-
     public Repository createRepoFromXml() throws Exception {
 
+        verifyFoldersAndCommitsIntegrity();
         String headBranch = repoData.getMagitBranches().getHead();
         RepoSettings settings = new RepoSettings(repoData.getName(), repoData.getLocation(), headBranch);
         this.repo = new Repository(settings);
@@ -72,13 +66,32 @@ public class XmlRepoImporter {
         loadFolders();
         //Write blobs and folders to disk
         for (MagitObject object : repo.getObjectsAsCollection())
-            repo.writeMagitObjectToDisk(object);
+            repo.useFileUtils().writeObjectToDisk(object);
 
         loadCommits();
-        //after all - set active branch - to create the necessary files
-        //create current commit dataBases
+        loadBranches();
+        repo.useFileUtils().checkoutOnDisk(repo.getActiveBranch());
+        repo.createCurrentCommitDatabases();
         return repo;
     }
+
+    private void verifyFoldersAndCommitsIntegrity() throws Exception {
+        Set<String> foldersIDs= new HashSet<>();
+        Set<String> commitsIDs= new HashSet<>();
+
+        for (MagitSingleFolder folder : repoData.getMagitFolders().getMagitSingleFolder()) {
+            if (foldersIDs.contains(folder.getId()))
+                throw new Exception("Duplicate ID for two folders found!");
+            foldersIDs.add(folder.getId());
+        }
+
+        for (MagitSingleCommit commit : repoData.getMagitCommits().getMagitSingleCommit()) {
+            if (commitsIDs.contains(commit.getId()))
+                throw new Exception("Duplicate ID for two commits found!");
+            commitsIDs.add(commit.getId());
+        }
+    }
+
 
     private void loadBlobs() throws Exception {
         List<MagitBlob> blobsList = repoData.getMagitBlobs().getMagitBlob();
@@ -90,12 +103,11 @@ public class XmlRepoImporter {
 
             //create it's metadata and add to an internal Importer map
             if (this.blobsData.containsKey(blobData.getId()))
-                throw new Exception("Duplicate ID for two different blobs found!");
+                throw new Exception("Duplicate ID for two blobs found!");
             MagitObjMetadata blobMetadata = new MagitObjMetadata(blobData, blob.calcSha1());
             this.blobsData.put(blobData.getId(), blobMetadata);
         }
     }
-
 
     private void loadFolders() throws Exception {
         List<MagitSingleFolder> foldersList = repoData.getMagitFolders().getMagitSingleFolder();
@@ -168,7 +180,6 @@ public class XmlRepoImporter {
         return commitData;
     }
 
-
     private MagitObjMetadata createMetadataAndPutToImporterMaps(MagitSingleFolder folderData, String folderSha1) throws Exception {
         String folderID = folderData.getId();
         if (this.foldersData.containsKey(folderID))
@@ -181,7 +192,6 @@ public class XmlRepoImporter {
 
         return folderMetadata;
     }
-
 
     private void loadCommits() throws Exception {
 
@@ -197,9 +207,9 @@ public class XmlRepoImporter {
 
     private void loadCommits_Rec(MagitSingleCommit commitData) throws Exception {
 
-        //verify all preceding commit already loaded (we need to have their sha1). if not, load them first.
-        final List<PrecedingCommits.PrecedingCommit> precedingCommits = commitData.getPrecedingCommits().getPrecedingCommit();
-        if (!precedingCommits.isEmpty()) {
+        if (commitData.getPrecedingCommits() != null) {
+            //verify all preceding commit already loaded (we need to have their sha1). if not, load them first.
+            final List<PrecedingCommits.PrecedingCommit> precedingCommits = commitData.getPrecedingCommits().getPrecedingCommit();
             for (PrecedingCommits.PrecedingCommit precedingCommit : precedingCommits) {
                 //prevent infinite loop
                 if (precedingCommit.getId().equals(commitData.getId()))
@@ -215,13 +225,12 @@ public class XmlRepoImporter {
     }
 
     private void createNewCommit(MagitSingleCommit commitData) throws Exception {
-        //Gather the new commit metadata
 
         String creationTime = commitData.getDateOfCreation();
         String author = commitData.getAuthor();
         String message = commitData.getMessage();
 
-        String parentCommitSha1 = getRootFolderSha1(commitData);
+        String parentCommitSha1 = getParentCommitSha1(commitData);
         //String anotherParentCommitID = commitData.getPrecedingCommits().getPrecedingCommit().get(1).getId();
         //String anotherParentCommitSha1 = commitsIDtoSha1.get(anotherParentCommitID);
         String rootFolderSha1 = getCommitRootFolderSha1(commitData);
@@ -231,14 +240,15 @@ public class XmlRepoImporter {
         this.commitsIDtoSha1.put(commitData.getId(), commit.calcSha1());
     }
 
-    private String getRootFolderSha1(MagitSingleCommit commitData)
-    {
+    private String getParentCommitSha1(MagitSingleCommit commitData) {
         //parentCommitSha1 should be exist because of the recursive commits loading, or null if the commit has no parents
         String parentCommitSha1 = null;
-        final List<PrecedingCommits.PrecedingCommit> precedingCommits = commitData.getPrecedingCommits().getPrecedingCommit();
-        if (!precedingCommits.isEmpty()) {
-            String parentCommitID = precedingCommits.get(0).getId();
-            parentCommitSha1 = commitsIDtoSha1.get(parentCommitID);
+        if (commitData.getPrecedingCommits() != null) {
+            final List<PrecedingCommits.PrecedingCommit> precedingCommits = commitData.getPrecedingCommits().getPrecedingCommit();
+            if (!precedingCommits.isEmpty()) {
+                String parentCommitID = precedingCommits.get(0).getId();
+                parentCommitSha1 = commitsIDtoSha1.get(parentCommitID);
+            }
         }
         return parentCommitSha1;
     }
@@ -250,10 +260,10 @@ public class XmlRepoImporter {
         if (rootFolderSha1 == null) {
             String exceptionMsg;
             if (foldersData.containsKey(rootFolderID)) {
-                exceptionMsg = "Commit ID #" + commitData.getId() + "is pointing to non-root folder #"
+                exceptionMsg = "Commit ID #" + commitData.getId() + " is pointing to non-root folder #"
                         + rootFolderID + "!";
             } else {
-                exceptionMsg = "Commit ID #" + commitData.getId() + "is pointing to invalid folder #"
+                exceptionMsg = "Commit ID #" + commitData.getId() + " is pointing to invalid folder #"
                         + rootFolderID + "!";
             }
             throw new Exception(exceptionMsg);
@@ -261,7 +271,25 @@ public class XmlRepoImporter {
         return rootFolderSha1;
     }
 
+    private void loadBranches() throws Exception {
+        List<MagitSingleBranch> branchesList = repoData.getMagitBranches().getMagitSingleBranch();
+        for (MagitSingleBranch branchData : branchesList) {
 
+            String pointedCommitID = branchData.getPointedCommit().getId();
+            String pointedCommitSha1 = commitsIDtoSha1.get(pointedCommitID);
+            if (pointedCommitSha1 == null)
+                throw new Exception("Branch " + branchData.getName() + " points to invalid commit id #"
+                        + pointedCommitID + "!");
+
+            Branch branch = new Branch(branchData.getName(), pointedCommitSha1);
+            repo.addNewBranchToRepo(branch);
+        }
+
+        if (repo.getActiveBranch() == null)
+            throw new Exception("Head branch " + repoData.getMagitBranches().getHead() + " doesn't exist!");
+
+        repo.useFileUtils().updateHeadBranchOnDisk(repo.getActiveBranch()); //to create HEAD and RepoSettings files on disk
+    }
 
 
 } //class end
