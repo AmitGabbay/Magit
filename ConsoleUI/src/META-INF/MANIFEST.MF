@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: consoleUI.MainMenu
+Class-Path: commons-collections4-4.3.jar commons-io-2.6.jar commons-code
+ c-1.12.jar MagitEngine.jar
+
