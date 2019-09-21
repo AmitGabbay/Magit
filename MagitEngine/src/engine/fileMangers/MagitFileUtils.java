@@ -12,10 +12,6 @@ public class MagitFileUtils {
     /**
      * Checks path validity (parent path exist and there is no folder with new repo name in it).
      * Exceptions will be thrown and propagated to the calling method if any problems found
-     *
-     * @param requestedPath
-     * @throws InvalidPathException
-     * @throws FileAlreadyExistsException
      */
     public static void newRepoOnDisk_PathValidation(String requestedPath) throws InvalidPathException, FileAlreadyExistsException {
 
@@ -31,15 +27,12 @@ public class MagitFileUtils {
             throw new FileAlreadyExistsException(fullPath.getFileName().toString(), null,
                     "Folder with this name already exist in the path " + parentPath);
         } else
-            System.out.println("Path validated."); //test
+            System.out.println("Path validated.");
     }
 
     /**
      * Should Be used only after path validation using the CreateNewRepoOnDisk_PathValidation() method!
      * HEAD and RepoSettings Files won't be created in this method, but in the master branch creation.
-     * @param repoSettings
-     * @param overrideFolder
-     * @throws IOException
      */
     public static void createRepoFoldersOnDisk(RepoSettings repoSettings, boolean overrideFolder) throws IOException {
 
@@ -51,7 +44,7 @@ public class MagitFileUtils {
         if (overrideFolder)
             FileUtils.cleanDirectory(new File(repoStringPath));
         else
-        Files.createDirectories(repoPath); //create all non-existing folders in the path
+            Files.createDirectories(repoPath); //create all non-existing folders in the path
 
         Files.createDirectory(magitPath);
         Files.createDirectory(magitPath.resolve("objects"));
@@ -73,19 +66,18 @@ public class MagitFileUtils {
         RepoSettings settings;
 
         try (ObjectInputStream in = new ObjectInputStream(
-                             new FileInputStream(settingsPath.toString()))) {
+                new FileInputStream(settingsPath.toString()))) {
 
-            settings = (RepoSettings)in.readObject();
+            settings = (RepoSettings) in.readObject();
         }
 
         return settings;
     }
 
-    //public static void
 
     /*
      ********************* test only section!!!*********************************
-    */
+     */
 
 //    public static void traverseCommit(Repository repo, Commit commit) throws IOException {
 //
@@ -107,7 +99,6 @@ public class MagitFileUtils {
 //            }
 //        }
 //    }
-
 
 
 } //class end

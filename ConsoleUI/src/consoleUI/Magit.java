@@ -1,16 +1,15 @@
 package consoleUI;
 
-import engine.repo.Branch;
-import engine.repo.Repository;
+import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.Commit;
 import engine.magitObjects.MagitObject;
-import engine.fileMangers.MagitFileUtils;
+import engine.repo.Branch;
+import engine.repo.Repository;
 import engine.xml.XmlRepoImporter;
 
 import java.io.File;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.InvalidPathException;
-
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -20,8 +19,8 @@ public class Magit {
 
     private final String tryAgainNonEmptyOrSpacesInEdges = "Please enter a non-empty input which doesn't starts or " +
             "ends with a space.";
+    private final Predicate<String> nonEmptyAndNoSpacesInEdgesString = v -> !(v.isEmpty() || v.startsWith(" ") || v.endsWith(" "));
     private Repository repo = null;
-    private Predicate<String> nonEmptyAndNoSpacesInEdgesString = v -> !(v.isEmpty() || v.startsWith(" ") || v.endsWith(" "));
 
     private static void printNoDefinedRepoMsg() {
         System.out.println("Error! Magit cannot perform this operation without a defined " +
@@ -83,8 +82,8 @@ public class Magit {
     public void loadRepoFromXml() {
 
         String inputMsg = "Please enter the location of the xml file: ";
-        String tryAgainMsg =  "Please enter a valid xml file path.";
-        Predicate<String> xmlFileReqs = f-> nonEmptyAndNoSpacesInEdgesString.test(f) && f.endsWith(".xml");
+        String tryAgainMsg = "Please enter a valid xml file path.";
+        Predicate<String> xmlFileReqs = f -> nonEmptyAndNoSpacesInEdgesString.test(f) && f.endsWith(".xml");
         String xmlFilePath = getValidUserString(inputMsg, tryAgainMsg, xmlFileReqs);
         File xmlFile = new File(xmlFilePath);
 
@@ -262,6 +261,10 @@ public class Magit {
             printNoDefinedRepoMsg();
             return;
         }
+        if (repo.isNoCommits()) {
+            System.out.println("There are no commits on this Repository. Please commit and try again.");
+            return;
+        }
 
         try {
             System.out.println(repo.getName() + " branches info:\n");
@@ -395,47 +398,26 @@ public class Magit {
             System.out.println("N\\A");
     }
 
-    public void inDevProgress() {
-        System.out.println("This operation will be added soon");
-
-        System.out.println(repo.getActiveBranchCommitsInfo());
-    }
-
     /**
      * ******** Testing only section!!! ********************************************************************************
      */
+
+    public void inDevProgress() {
+        System.out.println("This operation will be added soon");
+    }
+
 
     public void printObject_TEST() {
         Set<Map.Entry<String, MagitObject>> objects = repo.getObjectsAsEntrySet();
         for (Map.Entry<String, MagitObject> object : objects) {
             System.out.println(object.getKey() + ": " + object.getValue());
         }
-
         //System.out.println(repo.getObjectsAsMap());
 
 //        Collection<MagitObject> objects  = repo.getObjectsTxtAsCollection();
 //        for(MagitObject object : objects)
 //            System.out.println(object);
     }
-
-    public void my666() {
-//        File toCheck = new File("C:\\Magit\\word.docx");
-//        Blob blobi = new Blob(toCheck);
-//        toCheck = new File("C:\\Magit\\aa.txt");
-//        Blob blobi2 = new Blob(toCheck);
-        //repo.test123();
-        repo.createCurrentCommitDatabases();
-    }
-
-    public void my667() {
-//        File toCheck = new File("C:\\Magit\\word.docx");
-//        Blob blobi = new Blob(toCheck);
-//        toCheck = new File("C:\\Magit\\aa.txt");
-//        Blob blobi2 = new Blob(toCheck);
-        //repo.test123();
-        //repo.TEST_updateWcDatabases();
-    }
-
 
 } //class end
 

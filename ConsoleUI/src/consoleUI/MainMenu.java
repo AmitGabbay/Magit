@@ -121,14 +121,6 @@ public class MainMenu {
                 magit.checkout();
                 break;
 
-//            case TEST_GENERAL:
-//                magit.my666();
-//                break;
-//
-//            case TEST_GENERAL2:
-//                magit.my667();
-//                break;
-//
 //            case PRINT_OBJECTS_TEST:
 //                magit.printObject_TEST();
 //                break;

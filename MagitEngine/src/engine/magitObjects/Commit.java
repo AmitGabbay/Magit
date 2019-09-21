@@ -1,14 +1,13 @@
 package engine.magitObjects;
 
 import org.apache.commons.codec.digest.DigestUtils;
-
 import java.util.Objects;
 
 public class Commit implements Sha1Able {
 
     private final String rootFolderSha1;
-    private String parentCommitSha1;
-    private String anotherParentCommitSha1 = null;
+    private final String parentCommitSha1;
+    private final String anotherParentCommitSha1 = null;
     private final String description;
     private final String creationTime;
     private final String author;

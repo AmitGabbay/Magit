@@ -3,7 +3,6 @@ package engine.repo;
 import engine.fileMangers.MagitFileUtils;
 import engine.magitObjects.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -12,7 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -25,7 +27,7 @@ public class Repository {
     private final Map<String, Branch> branches; //index is name
     private final Map<String, MagitObject> repoObjects; //index is sha1
     private final Map<String, Commit> commits; //index is sha1
-
+    private final RepoFileUtils fileUtils;
     private Map<String, MagitObject> currentCommitObjects; //index is sha1
     private Map<String, MagitObject> wcObjects; //index is sha1
     private Map<Path, String> currentCommitFilesPaths; //<File Path, File Sha1>, current commit files path-sha1 table
@@ -33,9 +35,7 @@ public class Repository {
     private WC_PendingChangesData wcPendingChanges;
     private boolean pendingChangesWaiting; /* an "OK switch" for doing a new commit.
                                              Set "true" only by checkForWcPendingChanges method */
-
     private String activeUser = "Administrator";
-    private RepoFileUtils fileUtils;
 
     public Repository(RepoSettings settings) {
         this.settings = settings;
@@ -49,11 +49,6 @@ public class Repository {
     /**
      * Use only after validation of the requested path by the class method checkNewRepoPath!!!
      * Creates new repo (and folders on disk), and then adds an empty master branch to it (+write on disk)
-     *
-     * @param newRepoName
-     * @param requestedPath
-     * @return
-     * @throws IOException
      */
     public static Repository newRepoFromScratchCreator(String newRepoName, String requestedPath) throws Exception {
 
@@ -108,9 +103,6 @@ public class Repository {
         return settings;
     }
 
-    public Map<String, MagitObject> getObjectsAsMap() {
-        return repoObjects;
-    }
 
     public Collection<MagitObject> getObjectsAsCollection() {
         return repoObjects.values();
@@ -120,9 +112,6 @@ public class Repository {
         return repoObjects.entrySet();
     }
 
-    public MagitObject getRepoObject(String sha1) {
-        return repoObjects.get(sha1);
-    }
 
     public String getActiveUser() {
         return activeUser;
@@ -171,7 +160,7 @@ public class Repository {
         }
 
         //for Repo with existing commits
-        else // todo verify to build currentCommitDatabases on repo loading from xml
+        else
             anyChanges = fileUtils.createWcDatabases();
 
         //set the "OK Switch" according to the the changes check result
@@ -197,7 +186,7 @@ public class Repository {
         addNewObjectsToRepo(); //add the new wcObjects to  the repo objects and than write them to disk
         addNewCommitToRepo(newCommit); //add the new commit the repo's commits map and write it to the disk
         updateActiveBranch(newCommit.calcSha1()); //set active branch to point the current commit and write the branch to disk
-        System.out.println(newCommit); //test
+        //System.out.println(newCommit); //test
 
         //Update Current commit databases to the new one and disable the "Pending changes switch"
         createCurrentCommitDatabases();
@@ -295,7 +284,7 @@ public class Repository {
         this.currentCommitObjects.put(object.calcSha1(), object); //add object to currentCommit table
     }
 
-    public String getCurrentCommitObjectsData() throws Exception {
+    public String getCurrentCommitObjectsData() {
 
         StringBuilder commitObjectsData = new StringBuilder();
         String repoRootSha1 = getCurrentCommit().getRootFolderSha1();
@@ -323,7 +312,6 @@ public class Repository {
                 String currentFolderSha1 = currentObjectData.getSha1();
                 MagitFolder currentFolder = (MagitFolder) currentCommitObjects.get(currentFolderSha1);
                 getCurrentCommitObjectsData_Rec(commitObjectsData, currentFolder, currentObjectPath, treeLevel + 1);
-                //commitObjectsData.append("TEST\n");
             }
         }
     }
@@ -396,22 +384,6 @@ public class Repository {
         System.out.println(wcPendingChanges);
     }
 
-//    @Deprecated
-//    private void updateCurrentCommitFilesPaths() {
-//
-////        currentCommitFilesPaths = currentCommitObjects.values().stream()
-////                .filter(object -> object instanceof Blob)
-////                .collect(Collectors.toMap((MagitObject::getPath), MagitObject::calcSha1));
-//
-////        System.out.println(currentCommitFilesPaths); //test!!!
-//
-////        currentCommitPaths = currentCommitObjects.values().stream()
-////                .filter(object -> object instanceof Blob)
-////                .map(object -> object.getPath())
-////                .collect(Collectors.toList());
-//
-//    }
-
 
     public class RepoFileUtils {
 
@@ -423,14 +395,14 @@ public class Repository {
 
         private String newCommitRootFolderSha1;
 
-        public RepoFileUtils(String repoStringPath) {
+        private RepoFileUtils(String repoStringPath) {
             this.repoPath = Paths.get(repoStringPath);
             this.magitPath = repoPath.resolve(".magit");
             this.objectsPath = magitPath.resolve("objects");
             this.branchesPath = magitPath.resolve("branches");
         }
 
-        public void updateNewCommitTime() {
+        private void updateNewCommitTime() {
             SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
             this.newCommitTime = sdf.format(System.currentTimeMillis());
         }
@@ -525,11 +497,7 @@ public class Repository {
          */
         public boolean isWcEmpty() {
             File repoDir = new File(repoPath.toString());
-            if (repoDir.list().length == 1)
-                return true;
-
-            else
-                return false;
+            return repoDir.list().length == 1; // Only .magit folder exists
         }
 
         //returns True if any pending changes found, else otherwise.
@@ -601,7 +569,7 @@ public class Repository {
             if (currentCommitObjects.containsKey(objectSha1)) {
                 MagitObject originalObject = currentCommitObjects.get(objectSha1);
                 MagitFolder originalObjParentFolder = originalObject.getParentFolder();
-                //TODO Find metadata by sha1 (it's not a map index... before this fix both objects have to share the same name)
+                //TODO Find metadata by sha1 (it's not a map index... before this fix both objects have to share the same name)?
                 MagitObjMetadata originalObjMetadata = originalObjParentFolder.getObjMetadataByName(objectFile.getName());
                 if (originalObjMetadata != null) {
                     lastModifier = originalObjMetadata.getLastModifier();
@@ -709,8 +677,8 @@ public class Repository {
 
             if (Repository.this.commits.isEmpty())
                 throw new Exception("Cannot find any commits on this repo");
-            MapUtils.verbosePrint(System.out, null, commits); //test
-            // MapUtils.verbosePrint(System.out, null, repoObjects); //test
+            //MapUtils.verbosePrint(System.out, null, commits); //test
+            //MapUtils.verbosePrint(System.out, null, repoObjects); //test
         }
 
         private void deleteBranchFromDisk(String branchToDeleteName) throws IOException {
@@ -767,7 +735,7 @@ public class Repository {
         Collection<Path> changedFiles;
         Collection<Path> deletedFiles;
 
-        public WC_PendingChangesData() {
+        private WC_PendingChangesData() {
             this.newFiles = CollectionUtils.subtract(wcFilesPaths.keySet(), currentCommitFilesPaths.keySet());
             this.deletedFiles = CollectionUtils.subtract(currentCommitFilesPaths.keySet(), wcFilesPaths.keySet());
             this.changedFiles = createChangedFilesPathList();

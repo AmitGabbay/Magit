@@ -8,19 +8,19 @@ import java.util.*;
 
 public class MagitFolder extends MagitObject {
 
-    private final Map<String, MagitObjMetadata> objects;
+    private final Map<String, MagitObjMetadata> magitObjects;
     private transient StringBuilder contentAsText;
 
     public MagitFolder() {
-        objects = new TreeMap<>();
+        magitObjects = new TreeMap<>();
         contentAsText = new StringBuilder();
     }
 
     public void addObjectData(MagitObjMetadata objData) {
-        objects.put(objData.getName(), objData);
+        magitObjects.put(objData.getName(), objData);
     }
 
-    public String getTextContent() {
+    private String getTextContent() {
         updateTextContent();
         return contentAsText.toString();
     }
@@ -33,17 +33,17 @@ public class MagitFolder extends MagitObject {
 
     private void updateTextContent() {
         contentAsText.setLength(0);
-        for (MagitObjMetadata objData : objects.values()) {
+        for (MagitObjMetadata objData : magitObjects.values()) {
             contentAsText.append(objData.toString() + "\n");
         }
     }
 
     public Collection<MagitObjMetadata> getFolderObjects() {
-        return objects.values();
+        return magitObjects.values();
     }
 
     public MagitObjMetadata getObjMetadataByName(String objName) {
-        return objects.get(objName);
+        return magitObjects.get(objName);
     }
 
     @Override
@@ -51,13 +51,12 @@ public class MagitFolder extends MagitObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MagitFolder that = (MagitFolder) o;
-        return Objects.equals(objects, that.objects) &&
-                Objects.equals(contentAsText, that.contentAsText);
+        return Objects.equals(magitObjects, that.magitObjects);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objects, contentAsText);
+        return Objects.hash(magitObjects);
     }
 
     @Override

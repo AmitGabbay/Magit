@@ -16,8 +16,6 @@ public enum MenuItem {
     DELETE_BRANCH(10, "Delete an existing branch"),
     CHECKOUT(11, "Checkout (select branch)"),
     SHOW_COMMIT_HISTORY(12, "Show active branch commits history");
-//    TEST_GENERAL(666, "TEST - GENERAL"),
-//    TEST_GENERAL2(667, "TEST - GENERAL2"),
 //    PRINT_OBJECTS_TEST(777,"Test: print objects");
 
 
@@ -29,8 +27,8 @@ public enum MenuItem {
             ITEM_BY_NUM.put(item.UI_OpNumber, item);
     }
 
-    public final int UI_OpNumber;
-    public final String UI_Text;
+    private final int UI_OpNumber;
+    private final String UI_Text;
 
     MenuItem(int UI_OpNumber, String UI_Text) {
         this.UI_Text = UI_Text;
