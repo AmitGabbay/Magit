@@ -1,6 +1,7 @@
 # Magit
 
 This system demonstrates a very simple git implementation with basic functions like:
+
 - Load a repository of text files from an XML file (to the system UI and the local disk)
 - Change repository to another one
 - Show current commit files + metadata (file/folder hash, last modified time, last editor)
@@ -8,8 +9,15 @@ This system demonstrates a very simple git implementation with basic functions l
 - Commit
 - Branches basic functionality: create, delete, checkout, show all
 
-<img src="https://i.ibb.co/KhmkWrq/mainMenu.jpg" alt="mainMenu" border="0">
-<img src="https://i.ibb.co/q1Y8FQY/commit-Details2.jpg" alt="commit-Details2" border="0" width=1358 height=223>
+Main menu:
+
+![image](https://i.ibb.co/KhmkWrq/mainMenu.jpg)
+
+Branches menu:
+
+![image](https://i.ibb.co/nmyjmmF/branches-Info.jpg)
+
+
 
 
 ## Download
@@ -17,7 +25,6 @@ This system demonstrates a very simple git implementation with basic functions l
 download from here... dependencies included (add details)
 
 ## File system and XML information
-
 add here
 
 ```
