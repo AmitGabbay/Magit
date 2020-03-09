@@ -9,6 +9,8 @@ This system demonstrates a very simple git implementation with basic functions l
 - Commit
 - Branches basic functionality: create, delete, checkout, show all
 
+### Examples:
+
 Main menu:
 
 ![image](https://i.ibb.co/KhmkWrq/mainMenu.jpg)
@@ -16,7 +18,6 @@ Main menu:
 Branches menu:
 
 ![image](https://i.ibb.co/nmyjmmF/branches-Info.jpg)
-
 
 
 
@@ -35,6 +36,7 @@ Give examples
 
 ### System Design
 Objects are stored in memory as nearly as possible to the format they are saved in files (according to the design specifications of Magit). Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or xml.
+
 
 ### Major Classes by modules
 
