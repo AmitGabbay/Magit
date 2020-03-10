@@ -36,19 +36,18 @@ Magit stores files (blobs), folders and commits in objects files. Each object is
 
 **Blob** - Represent a text file, and contains its content. The SHA-1 is calculated on this content.
 
-**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 identifier, last modifier and last modified time. The SHA-1 is calculated on this description.
+**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 identifier, last modifier and last modified time. The SHA-1 is calculated on the concentration of those descriptions.
 
-**Commit** - Contains a root folder SHA-1, parent commit SHA-1, description, creation time and author. The SHA-1 is calculated on the string concentration of those properties 
+**Commit** - Contains a root folder SHA-1, parent commit SHA-1, description, creation time and author. The SHA-1 is calculated on the string concentration of those properties.
 
 
 Objects are stored in memory as nearly as possible to the format they are saved in files. Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or XML.
 
 
 ### File system structure
-Similarly to Git, any repository that is managed by the Magit system contains a folder named .magit, which contains the data created by the system. The .magit folder conatins:
+Similarly to Git, any repository that is managed by the Magit system contains a folder named .magit, which stores the data created by the system. The .magit folder includes:
 
-**barnches folder** - Each brach is represented by a file contains the SHA-1 hash of its pointed commit, and a HEAD file contains the active branch name
-
+**branches folder** - Each branch is represented by a file contains the SHA-1 hash of its pointed commit, and a HEAD file contains the active branch name.
 
 **objects folder** - Contains all repository files, folders, and commits data, Gzipped and named by their SHA-1 hash 
 
@@ -56,8 +55,7 @@ Similarly to Git, any repository that is managed by the Magit system contains a 
 
 
 ### XML structure
-Can be found at the magit.xsd file **(add link)**
-A sample xml can be found here **add link**
+Supported XML file structure be found at the [magit.xsd](MagitEngine/src/engine/xml/generated/MAGit.xsd) file. A sample xml can be found here **add link**
 
 ### Major Classes by modules
 
@@ -83,7 +81,7 @@ MagitFileUtils – Contains static methods responsible for file system operation
 
 
 
-
+# seperator
 
 
 
