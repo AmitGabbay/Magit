@@ -2,8 +2,8 @@
 
 This system demonstrates a very simple git implementation with basic functions like:
 
-- Load a repository of text files from an XML file (to the system UI and the local disk)
-- Change repository to another one
+- Load repository from an XML file (to the system UI and the local disk)
+- Load repository from disk
 - Show current commit files + metadata (file/folder hash, last modified time, last editor)
 - Show status (open changes from the current commit)
 - Commit
@@ -29,31 +29,28 @@ download from here... dependencies included (add details)
 Give examples
 ```
 
-### Some more details...
 
 ## System Design
 
-Magit stores files (blobs), folders and in objects files. Each object is identefied by an unique SHA-1 hash, which is calculated based on the object type.
+Magit stores files (blobs), folders and commits in objects files. Each object is identified by a unique SHA-1 hash, which is calculated based on the object's type.
 
-**Blob** - Represent a text file, and contains the it's content. The SHA-1 is calculated the file's content.
+**Blob** - Represent a text file, and contains its content. The SHA-1 is calculated on this content.
 
-**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 indetifier, last modifier and last modified time. The SHA-1 is calulated on this description.
+**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 identifier, last modifier and last modified time. The SHA-1 is calculated on this description.
 
-**Commit** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 indetifier, last modifier and last modified time. The SHA-1 is calulated on this description.
-
-
-Objects are stored in memory as nearly as possible to the format they are saved in files (according to the design specifications of Magit). Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or xml.
+**Commit** - Contains a root folder SHA-1, parent commit SHA-1, description, creation time and author. The SHA-1 is calculated on the string concentration of those properties 
 
 
+Objects are stored in memory as nearly as possible to the format they are saved in files. Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or XML.
 
 
 ### File system structure
 Similarly to Git, any repository that is managed by the Magit system contains a folder named .magit, which contains the data created by the system. The .magit folder conatins:
 
-**barnches folder** - Each brach is represented by a file contains the sha1 hash of its pointed commit, and a HEAD file contains the active branch name
+**barnches folder** - Each brach is represented by a file contains the SHA-1 hash of its pointed commit, and a HEAD file contains the active branch name
 
 
-**objects folder** - Contains all repository files, folders, and commits data, Gzipped and named by their sha1 hash 
+**objects folder** - Contains all repository files, folders, and commits data, Gzipped and named by their SHA-1 hash 
 
 **RepoSettings file** - Includes repository name, disk path, and head branch. Saved in binary format. 
 
