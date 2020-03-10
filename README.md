@@ -33,9 +33,13 @@ Give examples
 
 ## System Design
 
-3 Types of objects are used to represent the repositoy contents:
-**blob** - represent a text file. The blob contains the file content, and the unique sha1 identifier is calculated on this content.
-**folder** - contains a text description for each file/folder that is stored inside it directly: name, sha1 indetifier, last modifier and last modified time. The sha1 identifier is calulated on this description.
+Magit stores files (blobs), folders and in objects files. Each object is identefied by an unique SHA-1 hash, which is calculated based on the object type.
+
+**Blob** - Represent a text file, and contains the it's content. The SHA-1 is calculated the file's content.
+
+**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 indetifier, last modifier and last modified time. The SHA-1 is calulated on this description.
+
+**Commit** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 indetifier, last modifier and last modified time. The SHA-1 is calulated on this description.
 
 
 Objects are stored in memory as nearly as possible to the format they are saved in files (according to the design specifications of Magit). Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or xml.
