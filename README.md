@@ -36,9 +36,9 @@ Magit stores files (blobs), folders and commits in objects files. Each object is
 
 **Blob** - Represent a text file, and contains its content. The SHA-1 is calculated on this content.
 
-**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 identifier, last modifier and last modified time. The SHA-1 is calculated on the concentration of those descriptions.
+**Folder** - Contains a text description for each file/folder that is stored inside it directly: name, sha1 identifier, last modifier and last modified time. The SHA-1 is calculated on the concatenation of those descriptions.
 
-**Commit** - Contains a root folder SHA-1, parent commit SHA-1, description, creation time and author. The SHA-1 is calculated on the string concentration of those properties.
+**Commit** - Contains a root folder SHA-1, parent commit SHA-1, description, creation time and author. The SHA-1 is calculated on the string concatenation of those properties.
 
 
 Objects are stored in memory as nearly as possible to the format they are saved in files. Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or XML.
