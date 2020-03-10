@@ -25,18 +25,38 @@ Branches menu:
 
 download from here... dependencies included (add details)
 
-## File system and XML information
-add here
-
 ```
 Give examples
 ```
 
-## Some more details...
+### Some more details...
 
-### System Design
+## System Design
+
+3 Types of objects are used to represent the repositoy contents:
+**blob** - represent a text file. The blob contains the file content, and the unique sha1 identifier is calculated on this content.
+**folder** - contains a text description for each file/folder that is stored inside it directly: name, sha1 indetifier, last modifier and last modified time. The sha1 identifier is calulated on this description.
+
+
 Objects are stored in memory as nearly as possible to the format they are saved in files (according to the design specifications of Magit). Few additional fields that required for system operation marked as transient and recovered in runtime when loading a repository from folder or xml.
 
+
+
+
+### File system structure
+Similarly to Git, any repository that is managed by the Magit system contains a folder named .magit, which contains the data created by the system. The .magit folder conatins:
+
+**barnches folder** - Each brach is represented by a file contains the sha1 hash of its pointed commit, and a HEAD file contains the active branch name
+
+
+**objects folder** - Contains all repository files, folders, and commits data, Gzipped and named by their sha1 hash 
+
+**RepoSettings file** - Includes repository name, disk path, and head branch. Saved in binary format. 
+
+
+### XML structure
+Can be found at the magit.xsd file **(add link)**
+A sample xml can be found here **add link**
 
 ### Major Classes by modules
 
