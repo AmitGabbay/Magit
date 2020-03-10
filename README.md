@@ -79,7 +79,7 @@ Supported XML file structure be found at the [magit.xsd](MagitEngine/src/engine/
 
 - *Magit* - The most significant class in the module, has methods that responsible for any operation the user selects in the main menu. Uses the Repository and MagitFilesUtils classes from the MagitEngine module
 
-**[MagitEngine](MagitEngine) – Main logic engine, processes all user command and operation:**
+**[MagitEngine][MagitEngine] – Main logic engine, processes all user command and operation:**
 - *Repository* – The main class in the system, responsible for almost any operation on an existing repository, and for creating a new one and loading a one from folder
 
 - Nested class *RepoFileUtils* – Responsible for any operation on the filesystem
