@@ -66,7 +66,8 @@ Similarly to Git, any repository that is managed by the Magit system contains a 
 
 ### XML structure
 
-Supported XML file structure be found at the [magit.xsd](MagitEngine/src/engine/xml/generated/MAGit.xsd) file. A sample xml can be found here `**add link**`
+Supported XML file structure be found at the [magit.xsd](MagitEngine/src/engine/xml/generated/MAGit.xsd) file. 
+A sample XML file with repository data is available [here](https://drive.google.com/file/d/13zcj2-dSHvATMPJJqfi306SDgBi7V2Jm/view?usp=sharing).
 
 ----
 
@@ -90,7 +91,7 @@ Supported XML file structure be found at the [magit.xsd](MagitEngine/src/engine/
 
 - *Xml.generated package* – Classes that were generated from the given Magit xml schema file. When loading an xml – a repository representation using this classes is generated and the XmlRepoImporter class converts it to my Magit repository representation.
 
-- *Blob, MagitFolder, Commit and Branch *– represents those git object types
+- *Blob, MagitFolder, Commit and Branch* – represents those git object types
 
 - *Sha1Able* – interface implemented by Blob, MagitFolder and Commit classes, requires implementing the calcSha1() function
 
